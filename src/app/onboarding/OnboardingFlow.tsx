@@ -454,7 +454,7 @@ function Step5({
             const v = Number(e.target.value);
             if (v >= 18 && v <= 70) update({ age: v });
           }}
-          className="text-[14px] font-medium text-ink w-[52px] text-right bg-transparent outline-none border-b border-rose"
+          className="text-[14px] font-medium text-ink w-[52px] text-right bg-transparent outline-none border-b border-rose [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <span className="text-[13px] text-ink-2 font-light">años</span>
       </div>

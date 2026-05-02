@@ -101,6 +101,7 @@ export default function IntroPage() {
               onChange={(e) => setAge(e.target.value)}
               min={18}
               max={70}
+              className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
 

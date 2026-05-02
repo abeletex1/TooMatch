@@ -25,6 +25,7 @@ export default function DailyQuestion({
   const [tab, setTab] = useState<"hoy" | "historial">("hoy");
   const [pending, setPending] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(initialAnswer);
+  const [localHistory, setLocalHistory] = useState<HistoryItem[]>(history);
   const [isPending, startTransition] = useTransition();
 
   function select(option: string) {
@@ -37,6 +38,15 @@ export default function DailyQuestion({
     startTransition(async () => {
       await saveAnswerAction(questionId, pending);
       setSaved(pending);
+      // Añadir la respuesta al historial local para verla inmediatamente
+      setLocalHistory((prev) => [
+        {
+          question_text: questionText,
+          answer: pending,
+          active_date: new Date().toISOString().split("T")[0],
+        },
+        ...prev,
+      ]);
       setPending(null);
     });
   }
@@ -63,53 +73,45 @@ export default function DailyQuestion({
 
       {tab === "hoy" && (
         <>
-          <div className="bg-bg-2 rounded-2xl p-4 mb-3">
-            <p className="font-serif italic text-[17px] text-ink leading-[1.45] mb-4">
-              {questionText}
-            </p>
-            <div className="flex flex-col gap-2">
-              {options.map((opt) => {
-                const isSaved = saved === opt;
-                const isPicked = pending === opt;
-                const isLocked = saved !== null || isPending;
-                const fadeOut =
-                  isLocked && !isSaved && !isPicked;
+          {!saved ? (
+            <>
+              <div className="bg-bg-2 rounded-2xl p-4 mb-3">
+                <p className="font-serif italic text-[17px] text-ink leading-[1.45] mb-4">
+                  {questionText}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {options.map((opt) => {
+                    const isPicked = pending === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => select(opt)}
+                        className={`text-left px-3.5 py-2.5 rounded-xl text-[13px] font-light border-[0.5px] transition-colors ${
+                          isPicked
+                            ? "border-rose bg-rose-light text-rose-dark"
+                            : "border-border bg-bg text-ink-2 hover:bg-bg-2"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    disabled={isLocked}
-                    onClick={() => select(opt)}
-                    className={`text-left px-3.5 py-2.5 rounded-xl text-[13px] font-light border-[0.5px] transition-colors ${
-                      isSaved
-                        ? "border-rose bg-rose-light text-rose-dark"
-                        : isPicked
-                        ? "border-rose bg-rose-light text-rose-dark"
-                        : fadeOut
-                        ? "border-border bg-bg text-ink-3 opacity-50"
-                        : "border-border bg-bg text-ink-2 hover:bg-bg-2"
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {pending && !saved && (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={submit}
-              className="w-full py-3 rounded-xl bg-ink text-bg text-[13px] font-light disabled:opacity-40 transition-opacity mb-3"
-            >
-              {isPending ? "Enviando…" : "Enviar respuesta →"}
-            </button>
-          )}
-
-          {saved && (
+              {pending && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={submit}
+                  className="w-full py-3 rounded-xl bg-ink text-bg text-[13px] font-light disabled:opacity-40 transition-opacity mb-3"
+                >
+                  {isPending ? "Enviando…" : "Enviar respuesta →"}
+                </button>
+              )}
+            </>
+          ) : (
             <div className="animate-fade-up bg-rose-light border-[0.5px] border-rose-mid rounded-xl px-4 py-3.5 text-center">
               <p className="font-serif italic text-[15px] text-rose-dark leading-[1.45]">
                 Anotado. Mañana otra pregunta —{" "}
@@ -122,14 +124,14 @@ export default function DailyQuestion({
 
       {tab === "historial" && (
         <div className="flex flex-col gap-3">
-          {history.length === 0 ? (
+          {localHistory.length === 0 ? (
             <div className="bg-bg-2 rounded-2xl p-5 text-center">
               <p className="font-serif italic text-[15px] text-ink-3">
                 Aún no has respondido ninguna pregunta.
               </p>
             </div>
           ) : (
-            history.map((item, i) => (
+            localHistory.map((item, i) => (
               <div key={i} className="bg-bg-2 rounded-2xl p-4">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-ink-3 mb-1.5">
                   {new Date(item.active_date).toLocaleDateString("es-ES", {
