@@ -12,6 +12,11 @@ type Profile = {
   gender: string | null;
   seeking: string | null;
   photos: string[];
+  self_description: string | null;
+  partner_description: string | null;
+  values: string[];
+  age_min: number | null;
+  age_max: number | null;
 };
 
 type Match = {
@@ -74,6 +79,36 @@ function ProfileRow({
   );
 }
 
+const GENDER_LABEL: Record<string, string> = { male: "Hombre", female: "Mujer", other: "Otro" };
+const SEEKING_LABEL: Record<string, string> = { male: "Hombres", female: "Mujeres", both: "Hombres y mujeres" };
+
+function exportProfiles(profiles: Profile[]) {
+  const lines: string[] = [];
+
+  profiles.forEach((p, i) => {
+    lines.push(`PERFIL ${i + 1} — ${p.display_name ?? "Sin nombre"}, ${p.age ?? "?"} años`);
+    lines.push(`- Género: ${GENDER_LABEL[p.gender ?? ""] ?? "—"}`);
+    lines.push(`- Busca: ${SEEKING_LABEL[p.seeking ?? ""] ?? "—"}, entre ${p.age_min ?? "?"} y ${p.age_max ?? "?"} años`);
+    lines.push(`- Sobre mí: "${p.self_description ?? "—"}"`);
+    lines.push(`- Qué busco: "${p.partner_description ?? "—"}"`);
+    lines.push(`- Valores: ${(p.values ?? []).join(", ") || "—"}`);
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+  });
+
+  lines.push('Analiza estos perfiles y dime qué parejas son más compatibles entre sí, justificando brevemente cada sugerencia. Ten en cuenta género, lo que busca cada persona, el rango de edad, los valores y las descripciones.');
+
+  const text = lines.join("\n");
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `toomatch-perfiles-${new Date().toISOString().split("T")[0]}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminMatchPanel({
   profiles,
   matches,
@@ -130,9 +165,18 @@ export default function AdminMatchPanel({
 
       {/* ── Crear match ── */}
       <section className="bg-bg rounded-2xl px-4 py-4 border-[0.5px] border-border">
-        <h2 className="text-[11px] uppercase tracking-[0.1em] text-ink-3 font-medium mb-3">
-          Crear match manual
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[11px] uppercase tracking-[0.1em] text-ink-3 font-medium">
+            Crear match manual
+          </h2>
+          <button
+            type="button"
+            onClick={() => exportProfiles(profiles)}
+            className="text-[11px] text-rose-dark border-[0.5px] border-rose-mid bg-rose-light px-3 py-1.5 rounded-lg hover:opacity-70 transition-opacity"
+          >
+            Exportar para IA →
+          </button>
+        </div>
         <p className="text-[12px] text-ink-3 font-light mb-3">
           Selecciona dos personas. El orden no importa.
         </p>

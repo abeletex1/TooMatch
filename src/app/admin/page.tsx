@@ -25,7 +25,7 @@ export default async function AdminPage() {
   // Todos los perfiles con onboarding completado
   const { data: profiles } = await admin
     .from("profiles")
-    .select("user_id, display_name, age, city, gender, seeking, photos")
+    .select("user_id, display_name, age, city, gender, seeking, photos, self_description, partner_description, values, age_min, age_max")
     .eq("onboarding_completed", true)
     .order("created_at", { ascending: false });
 
