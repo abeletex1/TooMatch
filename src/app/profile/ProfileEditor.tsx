@@ -36,7 +36,7 @@ type Profile = {
   photos: string[];
 };
 
-type Sheet = "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "values" | "photo_pick" | null;
+type Sheet = "name" | "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "values" | "photo_pick" | null;
 
 /* ─── EditSheet ─────────────────────────────────────────────────────────── */
 
@@ -171,6 +171,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
   const [saving, startSaving] = useTransition();
 
   // Drafts por campo
+  const [nameDraft, setNameDraft] = useState(profile.display_name ?? "");
   const [ageDraft, setAgeDraft] = useState(profile.age ?? 25);
   const [cityDraft, setCityDraft] = useState(profile.city ?? "");
   const [genderDraft, setGenderDraft] = useState(profile.gender ?? "");
@@ -181,6 +182,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
 
   function open(sheet: Sheet) {
     // Resetear draft al valor actual al abrir
+    if (sheet === "name") setNameDraft(profile.display_name ?? "");
     if (sheet === "age") setAgeDraft(profile.age ?? 25);
     if (sheet === "city") setCityDraft(profile.city ?? "");
     if (sheet === "gender") setGenderDraft(profile.gender ?? "");
@@ -314,7 +316,10 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           </div>
         </button>
 
-        <p className="text-[14px] text-ink font-medium">{profile.display_name || userEmail}</p>
+        <button type="button" onClick={() => open("name")}
+          className="text-[14px] text-ink font-medium hover:opacity-70 underline underline-offset-2 decoration-dotted decoration-ink-3">
+          {profile.display_name || "Añadir nombre"}
+        </button>
         {profile.age ? (
           <p className="text-[12px] text-ink-2 font-light mt-0.5">
             {profile.age} años · {profile.distance_km} km de radio
@@ -421,14 +426,32 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
 
       {/* ══════════ SHEETS DE CAMPO ÚNICO ══════════ */}
 
+      <EditSheet open={activeSheet === "name"} title="Tu nombre"
+        onClose={() => setActiveSheet(null)} onSave={() => save({ display_name: nameDraft.trim() || undefined })} saving={saving}>
+        <input
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
+          placeholder="Tu nombre"
+          autoFocus
+          className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose"
+        />
+      </EditSheet>
+
       <EditSheet open={activeSheet === "age"} title="Tu edad"
         onClose={() => setActiveSheet(null)} onSave={() => save({ age: ageDraft })} saving={saving}>
-        <label className="text-[11px] uppercase tracking-[0.1em] text-ink-3 font-medium block">
-          {ageDraft} años
-        </label>
-        <input type="range" min={18} max={70} value={ageDraft}
-          onChange={(e) => setAgeDraft(Number(e.target.value))}
-          className="w-full" style={{ accentColor: "var(--color-rose)" }} />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={18}
+          max={70}
+          value={ageDraft}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            if (v >= 18 && v <= 70) setAgeDraft(v);
+          }}
+          autoFocus
+          className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[14px] font-medium bg-bg text-ink outline-none focus:border-rose [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
       </EditSheet>
 
       <EditSheet open={activeSheet === "city"} title="Tu ciudad"
