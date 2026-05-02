@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import AdminMatchPanel from "./AdminMatchPanel";
@@ -15,15 +16,21 @@ export default async function AdminPage() {
   if (!user) redirect("/login");
   if (!ADMIN_EMAIL || user.email !== ADMIN_EMAIL) redirect("/match");
 
+  // Cliente con service role para saltar RLS y ver todos los perfiles
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // Todos los perfiles con onboarding completado
-  const { data: profiles } = await supabase
+  const { data: profiles } = await admin
     .from("profiles")
     .select("user_id, display_name, age, city, gender, seeking, photos")
     .eq("onboarding_completed", true)
     .order("created_at", { ascending: false });
 
   // Matches activos
-  const { data: matches } = await supabase
+  const { data: matches } = await admin
     .from("matches")
     .select("id, user1_id, user2_id, created_at, unmatched_by")
     .order("created_at", { ascending: false });
