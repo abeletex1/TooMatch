@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
@@ -11,17 +12,26 @@ async function assertAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || user.email !== ADMIN_EMAIL) redirect("/match");
-  return supabase;
+  return user;
+}
+
+function getServiceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 }
 
 export async function createMatchAction(
   user1Id: string,
   user2Id: string
 ): Promise<{ error?: string }> {
-  const supabase = await assertAdmin();
+  await assertAdmin();
 
-  // Comprobar que no existe ya un match activo entre estos dos
-  const { data: existing } = await supabase
+  const admin = getServiceClient();
+
+  // Comprobar que no existe ya un match entre estos dos (activo o pasado)
+  const { data: existing } = await admin
     .from("matches")
     .select("id")
     .or(
@@ -32,7 +42,7 @@ export async function createMatchAction(
 
   if (existing) return { error: "Ya existe un match activo entre estas dos personas." };
 
-  const { error } = await supabase.from("matches").insert({
+  const { error } = await admin.from("matches").insert({
     user1_id: user1Id,
     user2_id: user2Id,
   });
@@ -44,9 +54,11 @@ export async function createMatchAction(
 export async function deleteMatchAction(
   matchId: string
 ): Promise<{ error?: string }> {
-  const supabase = await assertAdmin();
+  await assertAdmin();
 
-  const { error } = await supabase
+  const admin = getServiceClient();
+
+  const { error } = await admin
     .from("matches")
     .delete()
     .eq("id", matchId);
