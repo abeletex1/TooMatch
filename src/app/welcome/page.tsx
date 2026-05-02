@@ -2,12 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WelcomeSlides from "./WelcomeSlides";
 
-/**
- * Welcome — 4 slides educativas que explican el manifiesto de Too Match
- * antes de empezar el onboarding. Tras la última slide → /brand.
- *
- * Ruta protegida: solo usuarios autenticados.
- */
 export default async function WelcomePage() {
   const supabase = await createClient();
   const {
@@ -16,5 +10,13 @@ export default async function WelcomePage() {
 
   if (!user) redirect("/login");
 
-  return <WelcomeSlides />;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const firstName = profile?.display_name?.split(" ")[0] ?? null;
+
+  return <WelcomeSlides name={firstName} />;
 }

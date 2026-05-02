@@ -47,13 +47,17 @@ export default async function QuestionPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const history = (rawHistory ?? [])
-    .map((row: { answer: string; daily_questions: { question_text: string; active_date: string } | null }) => ({
-      answer: row.answer,
-      question_text: row.daily_questions?.question_text ?? "",
-      active_date: row.daily_questions?.active_date ?? "",
-    }))
-    .filter((r) => r.question_text);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const history = (rawHistory ?? []).map((row: any) => {
+    const q = Array.isArray(row.daily_questions)
+      ? row.daily_questions[0]
+      : row.daily_questions;
+    return {
+      answer: row.answer as string,
+      question_text: (q?.question_text ?? "") as string,
+      active_date: (q?.active_date ?? "") as string,
+    };
+  }).filter((r) => r.question_text);
 
   return (
     <MobileShell>

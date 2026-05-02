@@ -171,7 +171,7 @@ const slides: (Slide & { tone?: "rose" | "sage" })[] = [
 
 /* ===== Componente principal ============================================== */
 
-export default function WelcomeSlides() {
+export default function WelcomeSlides({ name }: { name: string | null }) {
   const [current, setCurrent] = useState(0);
   const router = useRouter();
 
@@ -206,6 +206,12 @@ export default function WelcomeSlides() {
         <p className="text-[11px] uppercase tracking-[0.12em] text-ink-3 mb-3">
           {slide.number}
         </p>
+
+        {current === 0 && name && (
+          <p className="text-[13px] text-ink-2 font-light mb-1">
+            Hola, <span className="text-ink font-medium">{name}</span>. Bienvenido a Too Match.
+          </p>
+        )}
 
         <h1 className="font-serif text-[32px] text-ink font-medium leading-[1.15] mb-4">
           {slide.title}
