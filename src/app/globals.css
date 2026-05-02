@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Too Match — Design tokens
+   --------------------------------------------------------------------------
+   Tailwind v4 reads variables declared inside @theme as utility classes.
+   bg-bg, text-ink, bg-rose, text-rose-dark, border-rose-mid, etc.
+   --font-serif and --font-sans become font-serif and font-sans utilities.
+   ========================================================================== */
+
+@theme {
+  /* Backgrounds (cream tones) */
+  --color-bg: #FAF7F2;
+  --color-bg-2: #F2EDE4;
+  --color-bg-3: #E8E0D4;
+
+  /* Ink (text) */
+  --color-ink: #1E1B17;
+  --color-ink-2: #6B6258;
+  --color-ink-3: #A8A099;
+
+  /* Rose (terracotta accent) */
+  --color-rose: #C4735A;
+  --color-rose-light: #F5E8E3;
+  --color-rose-mid: #E8B4A0;
+  --color-rose-dark: #8C4A35;
+
+  /* Green (logo only) */
+  --color-green: #6B8C7E;
+
+  /* Borders */
+  --color-border: rgba(30, 27, 23, 0.10);
+  --color-border-strong: rgba(30, 27, 23, 0.18);
+
+  /* Fonts (variables provided by next/font in layout.tsx) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", ui-serif, Georgia, serif;
+}
+
+/* Global resets */
+html, body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* The phone-shell only constrains width on larger screens. On mobile it
+   takes the full viewport, like a native app. */
+.shell {
+  background: var(--color-bg);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+@media (min-width: 480px) {
+  .shell {
+    max-width: 420px;
+    margin: 24px auto;
+    border-radius: 24px;
+    border: 0.5px solid var(--color-border-strong);
+    overflow: hidden;
+    /* Marco tipo móvil. Tamaño fijo en escritorio para que el contenido
+       no quede flotando con espacio vacío en pantallas altas. */
+    height: calc(100dvh - 48px);
+    min-height: 640px;
+    max-height: 760px;
+    box-shadow: 0 8px 32px rgba(30, 27, 23, 0.06);
+  }
+}
+
+/* Animación de entrada para slides y otros bloques. Reseteamos cambiando
+   la `key` del nodo en React. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.3s ease;
+}
+
+/* Entrada del hero del match: combina fade + lift + ligero zoom para que
+   sienta como un "reveal" cuidado, no un cambio de pantalla brusco. */
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-hero-reveal {
+  animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Halo rosa pulsando alrededor del avatar del match.
+   Sutil pero da sensación de "vivo". */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 16px rgba(196, 115, 90, 0.18);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(196, 115, 90, 0.36);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
