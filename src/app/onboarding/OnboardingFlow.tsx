@@ -444,9 +444,19 @@ function Step5({
         <label className="text-[13px] text-ink-2 flex-1 font-light">
           Tengo
         </label>
-        <span className="text-[14px] font-medium text-ink min-w-[28px] text-right">
-          {data.age}
-        </span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={18}
+          max={70}
+          value={data.age}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            if (v >= 18 && v <= 70) update({ age: v });
+          }}
+          className="text-[14px] font-medium text-ink w-[52px] text-right bg-transparent outline-none border-b border-rose"
+        />
+        <span className="text-[13px] text-ink-2 font-light">años</span>
       </div>
       <input
         type="range"

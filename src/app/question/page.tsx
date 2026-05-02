@@ -40,6 +40,21 @@ export default async function QuestionPage() {
         .then(({ data }) => data?.answer ?? null)
     : null;
 
+  // Historial de respuestas anteriores
+  const { data: rawHistory } = await supabase
+    .from("daily_answers")
+    .select("answer, question_id, daily_questions(question_text, active_date)")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const history = (rawHistory ?? [])
+    .map((row: { answer: string; daily_questions: { question_text: string; active_date: string } | null }) => ({
+      answer: row.answer,
+      question_text: row.daily_questions?.question_text ?? "",
+      active_date: row.daily_questions?.active_date ?? "",
+    }))
+    .filter((r) => r.question_text);
+
   return (
     <MobileShell>
       <Topbar right="Hoy" />
@@ -59,6 +74,7 @@ export default async function QuestionPage() {
             questionText={question.question_text}
             options={question.options}
             initialAnswer={existingAnswer}
+            history={history}
           />
         ) : (
           <div className="bg-bg-2 rounded-2xl p-5 text-center">
