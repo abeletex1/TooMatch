@@ -172,7 +172,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
 
   // Drafts por campo
   const [nameDraft, setNameDraft] = useState(profile.display_name ?? "");
-  const [ageDraft, setAgeDraft] = useState(profile.age ?? 25);
+  const [ageDraft, setAgeDraft] = useState(String(profile.age ?? 25));
   const [cityDraft, setCityDraft] = useState(profile.city ?? "");
   const [genderDraft, setGenderDraft] = useState(profile.gender ?? "");
   const [distanceDraft, setDistanceDraft] = useState(profile.distance_km);
@@ -183,7 +183,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
   function open(sheet: Sheet) {
     // Resetear draft al valor actual al abrir
     if (sheet === "name") setNameDraft(profile.display_name ?? "");
-    if (sheet === "age") setAgeDraft(profile.age ?? 25);
+    if (sheet === "age") setAgeDraft(String(profile.age ?? 25));
     if (sheet === "city") setCityDraft(profile.city ?? "");
     if (sheet === "gender") setGenderDraft(profile.gender ?? "");
     if (sheet === "distance") setDistanceDraft(profile.distance_km);
@@ -317,8 +317,14 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
         </button>
 
         <button type="button" onClick={() => open("name")}
-          className="text-[14px] text-ink font-medium hover:opacity-70 underline underline-offset-2 decoration-dotted decoration-ink-3">
-          {profile.display_name || "Añadir nombre"}
+          className="flex items-center justify-center gap-1.5 mx-auto hover:opacity-70 group">
+          <span className="text-[15px] text-ink font-medium">
+            {profile.display_name || "Añadir nombre"}
+          </span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3 group-hover:text-rose transition-colors">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
         </button>
         {profile.age ? (
           <p className="text-[12px] text-ink-2 font-light mt-0.5">
@@ -438,19 +444,18 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
       </EditSheet>
 
       <EditSheet open={activeSheet === "age"} title="Tu edad"
-        onClose={() => setActiveSheet(null)} onSave={() => save({ age: ageDraft })} saving={saving}>
+        onClose={() => setActiveSheet(null)}
+        onSave={() => { const v = Number(ageDraft); if (v >= 18 && v <= 70) save({ age: v }); }}
+        saving={saving}>
         <input
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={18}
-          max={70}
+          pattern="[0-9]*"
           value={ageDraft}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            if (v >= 18 && v <= 70) setAgeDraft(v);
-          }}
+          onChange={(e) => setAgeDraft(e.target.value.replace(/\D/g, ""))}
           autoFocus
-          className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[14px] font-medium bg-bg text-ink outline-none focus:border-rose [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          placeholder="Ej. 27"
+          className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[14px] font-medium bg-bg text-ink outline-none focus:border-rose"
         />
       </EditSheet>
 
