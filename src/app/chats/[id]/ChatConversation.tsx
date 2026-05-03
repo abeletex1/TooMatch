@@ -244,7 +244,7 @@ export default function ChatConversation({
           onKeyDown={handleKey}
           placeholder="Escribe un mensaje…"
           disabled={sending}
-          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
+          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[16px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
         />
         <button
           onClick={send}
