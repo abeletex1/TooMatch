@@ -5,7 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MatchAvatar from "@/components/ui/MatchAvatar";
 import UnmatchSheet from "@/components/ui/UnmatchSheet";
-import ExpandableText from "@/components/ui/ExpandableText";
+function ReadMoreText({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 120;
+  return (
+    <div>
+      <p className={`text-[14px] text-ink font-light leading-[1.6] break-words whitespace-pre-line ${!expanded && isLong ? "line-clamp-3" : ""}`}>
+        {text}
+      </p>
+      {isLong && !expanded && (
+        <button onClick={() => setExpanded(true)} className="text-[12px] text-rose mt-2 hover:opacity-70 transition-opacity">
+          Ver más →
+        </button>
+      )}
+    </div>
+  );
+}
 import { UNLOCK_AFTER_MESSAGES } from "@/lib/mock/matches";
 import { createClient } from "@/lib/supabase/client";
 import { sendMessageAction, unmatchAction } from "./actions";
@@ -141,7 +156,7 @@ export default function ChatConversation({
   }
 
   return (
-    <div className="shell flex flex-col bg-bg w-full overflow-hidden relative" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-bg w-full overflow-hidden relative" style={{ height: "100dvh" }}>
 
       {/* ── Header (siempre visible) ── */}
       <div className="shrink-0 bg-bg border-b-[0.5px] border-border">
@@ -320,7 +335,7 @@ export default function ChatConversation({
             {match.self_description && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4 overflow-hidden">
                 <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Sobre {match.name.split(" ")[0]}</p>
-                <ExpandableText text={match.self_description} title={`Sobre ${match.name.split(" ")[0]}`} />
+                <ReadMoreText text={match.self_description} />
               </div>
             )}
 
@@ -349,7 +364,7 @@ export default function ChatConversation({
             {match.partner_description && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4 overflow-hidden">
                 <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Lo que busca</p>
-                <ExpandableText text={match.partner_description} title="Lo que busca" />
+                <ReadMoreText text={match.partner_description} />
               </div>
             )}
           </div>
