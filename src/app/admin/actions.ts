@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import OpenAI from "openai";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
@@ -100,7 +101,6 @@ REGLAS ESTRICTAS:
 6. Responde ÚNICAMENTE con JSON válido, sin texto adicional:
 {"pairs": [["uuid1", "uuid2"], ["uuid3", "uuid4"]]}`;
 
-  const OpenAI = (await import("openai")).default;
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const response = await openai.chat.completions.create({
