@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import OpenAI from "openai";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
@@ -101,19 +100,30 @@ REGLAS ESTRICTAS:
 6. Responde ÚNICAMENTE con JSON válido, sin texto adicional:
 {"pairs": [["uuid1", "uuid2"], ["uuid3", "uuid4"]]}`;
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: profileText },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.3,
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: profileText },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    }),
   });
 
-  const content = response.choices[0].message.content ?? "";
+  if (!res.ok) {
+    const err = await res.text();
+    return { matched: 0, pairs: [], error: `OpenAI error ${res.status}: ${err}` };
+  }
+
+  const data = await res.json();
+  const content: string = data.choices?.[0]?.message?.content ?? "";
   let pairs: string[][];
   try {
     const parsed = JSON.parse(content);
