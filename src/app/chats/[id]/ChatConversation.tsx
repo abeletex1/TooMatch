@@ -162,7 +162,9 @@ export default function ChatConversation({
   );
 
   return (
-    <MobileShell>
+    // Chat usa height fija al viewport visual para que el teclado móvil no
+    // empuje el layout — el input se ancla abajo y los mensajes hacen scroll.
+    <div className="flex flex-col bg-bg" style={{ height: "100dvh" }}>
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-2.5 border-b-[0.5px] border-border bg-bg shrink-0">
         <Link
@@ -234,8 +236,8 @@ export default function ChatConversation({
         })}
       </div>
 
-      {/* Input */}
-      <div className="flex gap-2 px-4 pt-2.5 pb-3 border-t-[0.5px] border-border bg-bg shrink-0">
+      {/* Input — shrink-0 para que nunca se comprima cuando sube el teclado */}
+      <div className="flex gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -260,6 +262,6 @@ export default function ChatConversation({
         onClose={() => setUnmatchOpen(false)}
         onConfirm={confirmUnmatch}
       />
-    </MobileShell>
+    </div>
   );
 }

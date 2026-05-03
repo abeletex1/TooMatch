@@ -580,68 +580,66 @@ function Step7({
   update: (patch: Partial<Data>) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  function pickPhotoFor(slot: number) {
+  function openPicker() {
     setUploadError(null);
-    if (!fileInputRef.current) return;
-    fileInputRef.current.dataset.slot = String(slot);
-    fileInputRef.current.click();
+    fileInputRef.current?.click();
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const slot = Number(e.target.dataset.slot ?? "0");
-    const file = e.target.files?.[0];
-    e.target.value = ""; // reset para permitir reupload del mismo archivo
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
 
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Solo se aceptan imágenes.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError("La foto pesa más de 10 MB.");
-      return;
+    const available = MAX_PHOTOS - data.photos.length;
+    const toUpload = files.slice(0, available);
+
+    for (const file of toUpload) {
+      if (!file.type.startsWith("image/")) {
+        setUploadError("Solo se aceptan imágenes.");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError(`"${file.name}" pesa más de 10 MB.`);
+        return;
+      }
     }
 
-    setUploadingSlot(slot);
+    setUploading(true);
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Sin sesión.");
 
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${user.id}/${Date.now()}-${slot}.${ext}`;
+      const uploaded: string[] = [];
+      for (const file of toUpload) {
+        const ext = file.name.split(".").pop() ?? "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      const { error: upErr } = await supabase.storage
-        .from("profile-photos")
-        .upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
+        const { error: upErr } = await supabase.storage
+          .from("profile-photos")
+          .upload(path, file, { upsert: true });
+        if (upErr) throw upErr;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("profile-photos").getPublicUrl(path);
+        const { data: { publicUrl } } = supabase.storage
+          .from("profile-photos")
+          .getPublicUrl(path);
+        uploaded.push(publicUrl);
+      }
 
-      // Insertar/reemplazar foto en el slot
-      const photos = [...data.photos];
-      photos[slot] = publicUrl;
-      update({ photos });
+      update({ photos: [...data.photos, ...uploaded] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al subir";
       setUploadError(msg);
     } finally {
-      setUploadingSlot(null);
+      setUploading(false);
     }
   }
 
   function removePhoto(slot: number) {
-    const photos = [...data.photos];
-    photos[slot] = "";
-    // Compactar el array para que no haya huecos en medio
-    const compacted = photos.filter(Boolean);
+    const compacted = data.photos.filter((_, i) => i !== slot);
     update({ photos: compacted });
   }
 
@@ -658,71 +656,61 @@ function Step7({
         intercambiéis 5 mensajes. Nadie las ve antes.
       </AiHint>
 
+      {/* Input oculto — acepta múltiples archivos */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={handleFileChange}
       />
 
       <div className="grid grid-cols-3 gap-2 mb-3">
-        {Array.from({ length: MAX_PHOTOS }).map((_, i) => {
-          const url = data.photos[i];
-          const isUploading = uploadingSlot === i;
-
-          if (url) {
-            return (
-              <div
-                key={i}
-                className="aspect-square rounded-xl bg-bg-2 overflow-hidden relative"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`Foto ${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(i)}
-                  className="absolute top-1.5 right-1.5 w-[20px] h-[20px] rounded-full bg-ink/90 text-bg text-[12px] flex items-center justify-center hover:bg-ink"
-                  aria-label="Quitar foto"
-                >
-                  ×
-                </button>
-                {i === 0 ? (
-                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider bg-rose text-white">
-                    Principal
-                  </span>
-                ) : null}
-              </div>
-            );
-          }
-
-          return (
+        {data.photos.map((url, i) => (
+          <div
+            key={url}
+            className="aspect-square rounded-xl bg-bg-2 overflow-hidden relative"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
             <button
-              key={i}
               type="button"
-              disabled={isUploading || uploadingSlot !== null}
-              onClick={() => pickPhotoFor(data.photos.length)}
-              className="aspect-square rounded-xl border-[0.5px] border-dashed border-border-strong bg-bg-2 flex flex-col items-center justify-center gap-1 hover:bg-bg-3 transition-colors disabled:opacity-50"
+              onClick={() => removePhoto(i)}
+              className="absolute top-1.5 right-1.5 w-[20px] h-[20px] rounded-full bg-ink/90 text-bg text-[12px] flex items-center justify-center hover:bg-ink"
+              aria-label="Quitar foto"
             >
-              {isUploading ? (
-                <span className="text-[11px] text-rose">Subiendo…</span>
-              ) : (
-                <>
-                  <div className="w-6 h-6 rounded-full bg-bg border-[0.5px] border-border-strong flex items-center justify-center text-ink-3 text-[16px]">
-                    +
-                  </div>
-                  <span className="text-[9px] text-ink-3">
-                    {i === 0 ? "Principal" : `Foto ${i + 1}`}
-                  </span>
-                </>
-              )}
+              ×
             </button>
-          );
-        })}
+            {i === 0 && (
+              <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider bg-rose text-white">
+                Principal
+              </span>
+            )}
+          </div>
+        ))}
+
+        {data.photos.length < MAX_PHOTOS && (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={openPicker}
+            className="aspect-square rounded-xl border-[0.5px] border-dashed border-border-strong bg-bg-2 flex flex-col items-center justify-center gap-1 hover:bg-bg-3 transition-colors disabled:opacity-50"
+          >
+            {uploading ? (
+              <span className="text-[11px] text-rose">Subiendo…</span>
+            ) : (
+              <>
+                <div className="w-6 h-6 rounded-full bg-bg border-[0.5px] border-border-strong flex items-center justify-center text-ink-3 text-[16px]">
+                  +
+                </div>
+                <span className="text-[9px] text-ink-3">
+                  {data.photos.length === 0 ? "Añadir fotos" : "Añadir más"}
+                </span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {uploadError ? (
@@ -731,7 +719,7 @@ function Step7({
         </p>
       ) : (
         <p className="text-[11px] text-ink-3 text-center font-light">
-          Puedes terminar sin fotos y añadirlas después desde tu perfil.
+          Puedes seleccionar varias fotos a la vez. Puedes terminar sin fotos y añadirlas después.
         </p>
       )}
     </>

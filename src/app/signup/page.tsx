@@ -70,9 +70,21 @@ export default function SignupPage() {
               id="signup-password"
               type="password"
               name="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres y una mayúscula"
               required
-              minLength={6}
+              minLength={8}
+              autoComplete="new-password"
+            />
+          </div>
+          <div>
+            <FormLabel htmlFor="signup-password-confirm">Confirmar contraseña</FormLabel>
+            <Input
+              id="signup-password-confirm"
+              type="password"
+              name="password_confirm"
+              placeholder="Repite tu contraseña"
+              required
+              minLength={8}
               autoComplete="new-password"
             />
           </div>

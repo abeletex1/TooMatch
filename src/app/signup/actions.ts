@@ -25,9 +25,17 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
+  const passwordConfirm = String(formData.get("password_confirm") ?? "");
+
   if (!email) return { error: "Introduce tu correo." };
-  if (password.length < 6) {
-    return { error: "La contraseña debe tener al menos 6 caracteres." };
+  if (password.length < 8) {
+    return { error: "La contraseña debe tener al menos 8 caracteres." };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { error: "La contraseña debe tener al menos una letra mayúscula." };
+  }
+  if (password !== passwordConfirm) {
+    return { error: "Las contraseñas no coinciden." };
   }
 
   // Construye la URL pública del sitio para que Supabase sepa a dónde
