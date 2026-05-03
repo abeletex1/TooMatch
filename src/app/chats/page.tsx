@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
-import BottomNav from "@/components/ui/BottomNav";
-import Topbar from "@/components/ui/Topbar";
+import ScrollLayout from "@/components/ui/ScrollLayout";
 import ChatsListClient, { type ChatRow } from "./ChatsListClient";
 
 export default async function ChatsPage() {
@@ -77,13 +76,9 @@ export default async function ChatsPage() {
 
   return (
     <MobileShell>
-      <Topbar />
-
-      <main className="flex-1 overflow-y-auto">
+      <ScrollLayout>
         <ChatsListClient chats={chats} />
-      </main>
-
-      <BottomNav />
+      </ScrollLayout>
     </MobileShell>
   );
 }

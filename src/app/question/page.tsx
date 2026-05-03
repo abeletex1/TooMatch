@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
-import Topbar from "@/components/ui/Topbar";
-import BottomNav from "@/components/ui/BottomNav";
+import ScrollLayout from "@/components/ui/ScrollLayout";
 import DailyQuestion from "./DailyQuestion";
 
 export default async function QuestionPage() {
@@ -61,35 +60,33 @@ export default async function QuestionPage() {
 
   return (
     <MobileShell>
-      <Topbar right="Hoy" />
+      <ScrollLayout topbarRight="Hoy">
+        <div className="px-5 pt-5 pb-3">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-ink-3 mb-2">
+            Pregunta del día
+          </p>
+          <h1 className="font-serif text-[24px] text-ink font-medium leading-[1.25] mb-4">
+            La pregunta diaria nos ayuda a{" "}
+            <em className="italic text-rose">entenderte mejor</em>.
+          </h1>
 
-      <main className="flex-1 overflow-y-auto px-5 pt-5 pb-3">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-ink-3 mb-2">
-          Pregunta del día
-        </p>
-        <h1 className="font-serif text-[24px] text-ink font-medium leading-[1.25] mb-4">
-          La pregunta diaria nos ayuda a{" "}
-          <em className="italic text-rose">entenderte mejor</em>.
-        </h1>
-
-        {question ? (
-          <DailyQuestion
-            questionId={question.id}
-            questionText={question.question_text}
-            options={question.options}
-            initialAnswer={existingAnswer}
-            history={history}
-          />
-        ) : (
-          <div className="bg-bg-2 rounded-2xl p-5 text-center">
-            <p className="font-serif italic text-[16px] text-ink-3">
-              La pregunta de hoy llega pronto.
-            </p>
-          </div>
-        )}
-      </main>
-
-      <BottomNav />
+          {question ? (
+            <DailyQuestion
+              questionId={question.id}
+              questionText={question.question_text}
+              options={question.options}
+              initialAnswer={existingAnswer}
+              history={history}
+            />
+          ) : (
+            <div className="bg-bg-2 rounded-2xl p-5 text-center">
+              <p className="font-serif italic text-[16px] text-ink-3">
+                La pregunta de hoy llega pronto.
+              </p>
+            </div>
+          )}
+        </div>
+      </ScrollLayout>
     </MobileShell>
   );
 }
