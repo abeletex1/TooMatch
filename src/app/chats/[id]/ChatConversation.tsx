@@ -237,21 +237,29 @@ export default function ChatConversation({
       </div>
 
       {/* Input — shrink-0 para que nunca se comprima cuando sube el teclado */}
-      <div className="flex gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
           placeholder="Escribe un mensaje…"
           disabled={sending}
-          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
+          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
         />
         <button
           onClick={send}
           disabled={!input.trim() || sending}
-          className="px-4 py-2.5 rounded-xl bg-ink text-bg text-[13px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+          className="shrink-0 w-9 h-9 rounded-full bg-ink text-bg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+          aria-label="Enviar"
         >
-          {sending ? "…" : "Enviar"}
+          {sending ? (
+            <span className="text-[15px] leading-none">…</span>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22 11 13 2 9l20-7z" />
+            </svg>
+          )}
         </button>
       </div>
 
