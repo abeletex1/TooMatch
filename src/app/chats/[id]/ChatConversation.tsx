@@ -13,9 +13,9 @@ function ReadMoreText({ text }: { text: string }) {
       <p className={`text-[14px] text-ink font-light leading-[1.6] break-words whitespace-pre-line ${!expanded && isLong ? "line-clamp-3" : ""}`}>
         {text}
       </p>
-      {isLong && !expanded && (
-        <button onClick={() => setExpanded(true)} className="text-[12px] text-rose mt-2 hover:opacity-70 transition-opacity">
-          Ver más →
+      {isLong && (
+        <button onClick={() => setExpanded(!expanded)} className="text-[12px] text-rose mt-2 hover:opacity-70 transition-opacity">
+          {expanded ? "Ver menos ↑" : "Ver más →"}
         </button>
       )}
     </div>
