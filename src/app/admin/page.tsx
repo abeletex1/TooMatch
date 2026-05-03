@@ -37,7 +37,7 @@ export default async function AdminPage() {
 
   return (
     <MobileShell>
-      <Topbar right="Admin" />
+      <Topbar right="Admin" back="/match" />
       <main className="flex-1 overflow-y-auto bg-bg-2 px-3 py-4">
         <AdminMatchPanel
           profiles={profiles ?? []}
