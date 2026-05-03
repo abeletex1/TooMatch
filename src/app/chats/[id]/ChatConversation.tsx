@@ -164,7 +164,7 @@ export default function ChatConversation({
   return (
     // Chat usa height fija al viewport visual para que el teclado móvil no
     // empuje el layout — el input se ancla abajo y los mensajes hacen scroll.
-    <div className="flex flex-col bg-bg" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-bg w-full overflow-hidden" style={{ height: "100dvh" }}>
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-2.5 border-b-[0.5px] border-border bg-bg shrink-0">
         <Link
@@ -237,14 +237,14 @@ export default function ChatConversation({
       </div>
 
       {/* Input — shrink-0 para que nunca se comprima cuando sube el teclado */}
-      <div className="flex gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
+      <div className="flex gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0 overflow-hidden">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
           placeholder="Escribe un mensaje…"
           disabled={sending}
-          className="flex-1 border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
+          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
         />
         <button
           onClick={send}
