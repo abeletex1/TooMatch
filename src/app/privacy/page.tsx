@@ -24,7 +24,7 @@ export default function PrivacyPage() {
 
         <Section title="1. Quién somos">
           <p>
-            Too Match es una aplicación de citas operada por Abel Eletex
+            Too Match es una aplicación de citas operada por Abel Expósito Roselló
             («nosotros», «nuestro»). Puedes contactarnos en{" "}
             <a href="mailto:hola@toomatch.app" className="text-rose underline">
               hola@toomatch.app
