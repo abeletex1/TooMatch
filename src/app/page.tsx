@@ -49,7 +49,7 @@ export default function HomePage() {
           </button>
           {googleMsg && (
             <p className="text-[12px] text-ink-3 font-light text-center -mt-1">
-              Aún no está disponible
+              Próximamente disponible
             </p>
           )}
 
@@ -68,8 +68,8 @@ export default function HomePage() {
 
           <p className="text-center text-[11px] text-ink-3 font-light mt-1 leading-relaxed">
             Al continuar aceptas nuestros{" "}
-            <span className="underline">Términos</span> y{" "}
-            <span className="underline">Política de Privacidad</span>
+            <Link href="/terms" className="underline">Términos</Link> y{" "}
+            <Link href="/privacy" className="underline">Política de Privacidad</Link>
           </p>
         </section>
       </main>

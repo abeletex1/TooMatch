@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import Link from "next/link";
 import MobileShell from "@/components/ui/MobileShell";
@@ -16,6 +17,7 @@ import { loginAction } from "./actions";
  */
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
+  const [googleMsg, setGoogleMsg] = useState(false);
 
   return (
     <MobileShell>
@@ -30,13 +32,19 @@ export default function LoginPage() {
         </p>
 
         <div className="mt-7">
-          <a
-            href="/auth/google"
+          <button
+            type="button"
+            onClick={() => setGoogleMsg(true)}
             className="inline-flex items-center justify-center gap-2.5 rounded-xl px-4 py-[13px] text-[13px] bg-bg text-ink border-[0.5px] border-border-strong hover:bg-bg-2 w-full"
           >
             <GoogleIcon size={18} />
             <span>Continuar con Google</span>
-          </a>
+          </button>
+          {googleMsg && (
+            <p className="text-[12px] text-ink-3 font-light text-center mt-2">
+              Próximamente disponible
+            </p>
+          )}
         </div>
 
         <div className="my-3">
