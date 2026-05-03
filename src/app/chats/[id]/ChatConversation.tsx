@@ -249,10 +249,8 @@ export default function ChatConversation({
       )}
 
       {/* Mensajes */}
-      <div
-        ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto px-4 pt-3 pb-2"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="flex flex-col justify-end min-h-full px-4 pt-3 pb-2">
         {(() => {
           const items: React.ReactNode[] = [];
           let lastDay = "";
@@ -318,6 +316,7 @@ export default function ChatConversation({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Input */}
