@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import MobileShell from "@/components/ui/MobileShell";
 import MatchAvatar from "@/components/ui/MatchAvatar";
 import UnmatchSheet from "@/components/ui/UnmatchSheet";
 import { UNLOCK_AFTER_MESSAGES } from "@/lib/mock/matches";
@@ -28,22 +27,30 @@ export default function ChatConversation({
   const [sending, setSending] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
   const [unmatchOpen, setUnmatchOpen] = useState(false);
+  const [partnerTyping, setPartnerTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const channelRef = useRef<ReturnType<typeof createClient> extends { channel: (...args: unknown[]) => infer C } ? C : never>(null);
+  const partnerTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const myTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalMessages = messages.length;
   const unlocked = totalMessages >= UNLOCK_AFTER_MESSAGES;
   const remaining = Math.max(0, UNLOCK_AFTER_MESSAGES - totalMessages);
 
-  // Redirigir si ya está desmatched
+  function scrollToBottom(smooth = true) {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "instant" });
+  }
+
   useEffect(() => {
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
-  // Suscripción Realtime para mensajes nuevos
+  // Realtime: mensajes nuevos + indicador de escritura via broadcast
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel(`messages-${match.id}`)
+      .channel(`chat-${match.id}`)
       .on(
         "postgres_changes",
         {
@@ -57,7 +64,6 @@ export default function ChatConversation({
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             const updated = [...prev, newMsg];
-            // Detectar desbloqueo
             if (
               prev.length < UNLOCK_AFTER_MESSAGES &&
               updated.length >= UNLOCK_AFTER_MESSAGES
@@ -67,20 +73,53 @@ export default function ChatConversation({
             }
             return updated;
           });
+          // Ocultar indicador de escritura cuando llega el mensaje
+          setPartnerTyping(false);
         }
       )
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload.userId === currentUserId) return;
+        setPartnerTyping(true);
+        if (partnerTypingTimer.current) clearTimeout(partnerTypingTimer.current);
+        partnerTypingTimer.current = setTimeout(() => setPartnerTyping(false), 3000);
+      })
       .subscribe();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (channelRef as any).current = channel;
 
     return () => {
       supabase.removeChannel(channel);
+      if (partnerTypingTimer.current) clearTimeout(partnerTypingTimer.current);
+      if (myTypingTimer.current) clearTimeout(myTypingTimer.current);
     };
-  }, [match.id]);
+  }, [match.id, currentUserId]);
 
-  // Autoscroll al último mensaje
+  // Scroll al llegar mensajes nuevos o al aparecer el indicador de escritura
   useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [messages.length]);
+    scrollToBottom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, partnerTyping]);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInput(e.target.value);
+
+    // Broadcast typing con debounce para no saturar
+    if (myTypingTimer.current) clearTimeout(myTypingTimer.current);
+    myTypingTimer.current = setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (channelRef as any).current?.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { userId: currentUserId },
+      });
+    }, 200);
+  }
+
+  function handleFocus() {
+    // Esperar a que el teclado termine de abrirse antes de hacer scroll
+    setTimeout(() => scrollToBottom(), 350);
+  }
 
   async function send() {
     const text = input.trim();
@@ -89,7 +128,6 @@ export default function ChatConversation({
     setSending(true);
     setInput("");
 
-    // Optimistic: añadir mensaje local antes de recibir el evento Realtime
     const tempId = `temp-${Date.now()}`;
     const optimistic: MessageRow = {
       id: tempId,
@@ -113,11 +151,9 @@ export default function ChatConversation({
     const { error, messageId } = await sendMessageAction(match.id, text);
 
     if (error) {
-      // Revertir optimistic si falla
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
     } else if (messageId) {
-      // Reemplazar tempId con el ID real (el Realtime también puede llegar)
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: messageId } : m))
       );
@@ -162,8 +198,6 @@ export default function ChatConversation({
   );
 
   return (
-    // Chat usa height fija al viewport visual para que el teclado móvil no
-    // empuje el layout — el input se ancla abajo y los mensajes hacen scroll.
     <div className="flex flex-col bg-bg w-full overflow-hidden" style={{ height: "100dvh" }}>
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-2.5 border-b-[0.5px] border-border bg-bg shrink-0">
@@ -205,7 +239,7 @@ export default function ChatConversation({
         {totalMessages} / {UNLOCK_AFTER_MESSAGES} mensajes
       </div>
 
-      {/* Unlock badge animada */}
+      {/* Unlock badge */}
       {justUnlocked && (
         <div className="px-4 mt-2 shrink-0">
           <div className="animate-fade-up bg-rose-light text-rose-dark border-[0.5px] border-rose-mid rounded-xl px-3.5 py-2.5 text-center font-serif italic text-[14px] leading-[1.4]">
@@ -234,14 +268,24 @@ export default function ChatConversation({
             </div>
           );
         })}
+
+        {/* Indicador de escritura */}
+        {partnerTyping && (
+          <div className="self-start flex items-center gap-[3px] px-3.5 py-3 bg-bg-2 rounded-[18px] rounded-bl-[4px]">
+            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "0ms" }} />
+            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "160ms" }} />
+            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "320ms" }} />
+          </div>
+        )}
       </div>
 
-      {/* Input — shrink-0 para que nunca se comprima cuando sube el teclado */}
+      {/* Input */}
       <div className="flex items-center gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
         <input
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKey}
+          onFocus={handleFocus}
           placeholder="Escribe un mensaje…"
           disabled={sending}
           className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[16px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
