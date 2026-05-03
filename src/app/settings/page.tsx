@@ -8,10 +8,12 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const isAdmin = user.email === (process.env.ADMIN_EMAIL ?? "abeletex1@gmail.com");
+
   return (
     <MobileShell>
       <main className="flex-1 overflow-y-auto">
-        <SettingsClient email={user.email ?? ""} />
+        <SettingsClient email={user.email ?? ""} isAdmin={isAdmin} />
       </main>
     </MobileShell>
   );

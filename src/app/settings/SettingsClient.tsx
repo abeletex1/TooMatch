@@ -94,7 +94,7 @@ function InlineForm({ title, onClose, fields, submitLabel, action }: {
   );
 }
 
-export default function SettingsClient({ email }: { email: string }) {
+export default function SettingsClient({ email, isAdmin = false }: { email: string; isAdmin?: boolean }) {
   const [sheet, setSheet] = useState<"password" | "email" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -137,6 +137,21 @@ export default function SettingsClient({ email }: { email: string }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3"><path d="M9 18l6-6-6-6" /></svg>
           </Link>
         </Section>
+
+        {/* Panel admin — solo visible para el admin */}
+        {isAdmin && (
+          <Section title="Administración">
+            <Link href="/admin" className="flex items-center gap-3 px-4 py-3.5 hover:bg-bg-2 transition-colors">
+              <span className="text-ink-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                </svg>
+              </span>
+              <span className="text-[14px] font-light text-ink flex-1">Panel de admin — crear matches</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3"><path d="M9 18l6-6-6-6" /></svg>
+            </Link>
+          </Section>
+        )}
 
         {/* Sesión y cuenta */}
         <Section title="Sesión">
