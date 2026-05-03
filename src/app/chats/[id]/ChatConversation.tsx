@@ -251,30 +251,74 @@ export default function ChatConversation({
       {/* Mensajes */}
       <div
         ref={scrollRef}
-        className="flex-1 flex flex-col gap-2 px-4 py-3 overflow-y-auto"
+        className="flex-1 flex flex-col overflow-y-auto px-4 pt-3 pb-2"
       >
-        {messages.map((m) => {
-          const isMe = m.sender_id === currentUserId;
-          return (
-            <div
-              key={m.id}
-              className={`max-w-[78%] px-3.5 py-2.5 rounded-[18px] text-[13px] leading-[1.55] font-light ${
-                isMe
-                  ? "bg-ink text-bg self-end rounded-br-[4px]"
-                  : "bg-bg-2 text-ink self-start rounded-bl-[4px]"
-              }`}
-            >
-              {m.content}
-            </div>
-          );
-        })}
+        {/* Espaciador: empuja los mensajes hacia abajo cuando son pocos */}
+        <div className="flex-1" />
+
+        {(() => {
+          const items: React.ReactNode[] = [];
+          let lastDay = "";
+
+          messages.forEach((m) => {
+            const date = new Date(m.created_at);
+            const dayKey = date.toDateString();
+            const isMe = m.sender_id === currentUserId;
+
+            // Separador de día
+            if (dayKey !== lastDay) {
+              lastDay = dayKey;
+              const today = new Date();
+              const yesterday = new Date(today);
+              yesterday.setDate(yesterday.getDate() - 1);
+              const label =
+                date.toDateString() === today.toDateString()
+                  ? "Hoy"
+                  : date.toDateString() === yesterday.toDateString()
+                  ? "Ayer"
+                  : date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+
+              items.push(
+                <div key={`day-${dayKey}`} className="flex items-center gap-3 my-3">
+                  <div className="flex-1 h-[0.5px] bg-bg-3" />
+                  <span className="text-[10px] text-ink-3 font-light">{label}</span>
+                  <div className="flex-1 h-[0.5px] bg-bg-3" />
+                </div>
+              );
+            }
+
+            const timeStr = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+
+            items.push(
+              <div
+                key={m.id}
+                className={`flex flex-col mb-1 ${isMe ? "items-end" : "items-start"}`}
+              >
+                <div
+                  className={`max-w-[78%] px-3.5 py-2.5 rounded-[18px] text-[13px] leading-[1.55] font-light ${
+                    isMe
+                      ? "bg-ink text-bg rounded-br-[4px]"
+                      : "bg-bg-2 text-ink rounded-bl-[4px]"
+                  }`}
+                >
+                  {m.content}
+                </div>
+                <span className="text-[10px] text-ink-3 mt-0.5 px-1">{timeStr}</span>
+              </div>
+            );
+          });
+
+          return items;
+        })()}
 
         {/* Indicador de escritura */}
         {partnerTyping && (
-          <div className="self-start flex items-center gap-[3px] px-3.5 py-3 bg-bg-2 rounded-[18px] rounded-bl-[4px]">
-            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "0ms" }} />
-            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "160ms" }} />
-            <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "320ms" }} />
+          <div className="flex flex-col items-start mb-1">
+            <div className="flex items-center gap-[3px] px-3.5 py-3 bg-bg-2 rounded-[18px] rounded-bl-[4px]">
+              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "0ms" }} />
+              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "160ms" }} />
+              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "320ms" }} />
+            </div>
           </div>
         )}
       </div>
