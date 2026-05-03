@@ -49,12 +49,15 @@ html, body {
 
 /* The phone-shell only constrains width on larger screens. On mobile it
    takes the full viewport, like a native app. */
+/* El shell ocupa exactamente el viewport visual — el scroll ocurre dentro,
+   no en el body. Así el BottomNav y Topbar siempre quedan fijos. */
 .shell {
   background: var(--color-bg);
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 @media (min-width: 480px) {
@@ -63,14 +66,19 @@ html, body {
     margin: 24px auto;
     border-radius: 24px;
     border: 0.5px solid var(--color-border-strong);
-    overflow: hidden;
-    /* Marco tipo móvil. Tamaño fijo en escritorio para que el contenido
-       no quede flotando con espacio vacío en pantallas altas. */
     height: calc(100dvh - 48px);
     min-height: 640px;
     max-height: 760px;
     box-shadow: 0 8px 32px rgba(30, 27, 23, 0.06);
   }
+}
+
+/* Topbar con hide-on-scroll: añade la clase .topbar-hide para ocultarlo */
+.topbar-scroll {
+  transition: transform 0.25s ease;
+}
+.topbar-scroll.topbar-hide {
+  transform: translateY(-100%);
 }
 
 /* Animación de entrada para slides y otros bloques. Reseteamos cambiando

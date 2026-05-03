@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import BottomNav from "@/components/ui/BottomNav";
@@ -18,12 +19,14 @@ export default function MatchPageClient({
   match: RealMatch | null;
   dayNumber: number;
 }) {
+  const scrollRef = useRef<HTMLElement>(null);
+
   return (
     <MobileShell>
-      <Topbar right={`Día ${dayNumber}`} />
+      <Topbar right={`Día ${dayNumber}`} scrollRef={scrollRef} />
 
       {match ? (
-        <MatchHero match={match} />
+        <MatchHero match={match} scrollRef={scrollRef} />
       ) : (
         <NoMatchToday />
       )}
@@ -35,9 +38,9 @@ export default function MatchPageClient({
 
 /* ===== Hero del match (cuando hay) ======================================= */
 
-function MatchHero({ match }: { match: RealMatch }) {
+function MatchHero({ match, scrollRef }: { match: RealMatch; scrollRef: React.RefObject<HTMLElement | null> }) {
   return (
-    <main className="flex-1 overflow-y-auto px-5 pt-4 pb-3">
+    <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 pt-4 pb-3">
       {/* Hero — reveal animado al entrar */}
       <section className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-rose-light to-bg-2 px-5 pt-7 pb-6 text-center mb-4 animate-hero-reveal">
         <div className="absolute -top-5 -right-5 w-[120px] h-[120px] rounded-full bg-rose/[0.08]" />
