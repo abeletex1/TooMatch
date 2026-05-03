@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createMatchAction, deleteMatchAction } from "./actions";
+import { createMatchAction, deleteMatchAction, autoMatchAction, aiMatchAction } from "./actions";
 import { useRouter } from "next/navigation";
 
 type Profile = {
@@ -119,6 +119,8 @@ export default function AdminMatchPanel({
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [autoResult, setAutoResult] = useState<string | null>(null);
+  const [aiResult, setAiResult] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -160,8 +162,63 @@ export default function AdminMatchPanel({
   const activeMatches = matches.filter((m) => !m.unmatched_by);
   const oldMatches = matches.filter((m) => m.unmatched_by);
 
+  function handleAiMatch() {
+    setAiResult(null);
+    startTransition(async () => {
+      const res = await aiMatchAction();
+      if (res.error) {
+        setAiResult(`Error: ${res.error}`);
+      } else if (res.matched === 0) {
+        setAiResult("La IA no encontró parejas válidas.");
+      } else {
+        setAiResult(`✓ ${res.matched} match${res.matched > 1 ? "es" : ""} creado${res.matched > 1 ? "s" : ""} por la IA.`);
+        router.refresh();
+      }
+    });
+  }
+
+  function handleAutoMatch() {
+    setAutoResult(null);
+    startTransition(async () => {
+      const res = await autoMatchAction();
+      if (res.error) {
+        setAutoResult(`Error: ${res.error}`);
+      } else if (res.matched === 0) {
+        setAutoResult("No hay nuevas parejas posibles. Todos ya tienen match o no hay compatibilidades.");
+      } else {
+        setAutoResult(`✓ ${res.matched} match${res.matched > 1 ? "es" : ""} creado${res.matched > 1 ? "s" : ""}${res.skipped > 0 ? ` · ${res.skipped} usuario${res.skipped > 1 ? "s" : ""} sin pareja compatible` : ""}.`);
+        router.refresh();
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
+
+      {/* ── Matching con IA ── */}
+      <section className="bg-ink rounded-2xl px-4 py-4">
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-[11px] uppercase tracking-[0.1em] text-bg/60 font-medium">
+            Matching con IA
+          </h2>
+          <span className="text-[10px] bg-bg/20 text-bg/70 px-2 py-0.5 rounded-full">GPT-4o mini</span>
+        </div>
+        <p className="text-[12px] text-bg/70 font-light mb-4">
+          La IA analiza todos los perfiles y decide las mejores parejas. Nadie queda sin match.
+        </p>
+        {aiResult && (
+          <p className={`text-[12px] mb-3 font-light ${aiResult.startsWith("Error") ? "text-red-300" : "text-[#7EFBB0]"}`}>
+            {aiResult}
+          </p>
+        )}
+        <button
+          onClick={handleAiMatch}
+          disabled={pending || profiles.length < 2}
+          className="w-full py-3 rounded-xl bg-bg text-ink text-[13px] font-medium disabled:opacity-40 transition-opacity hover:opacity-90"
+        >
+          {pending ? "Consultando IA…" : "Hacer matches con IA →"}
+        </button>
+      </section>
 
       {/* ── Crear match ── */}
       <section className="bg-bg rounded-2xl px-4 py-4 border-[0.5px] border-border">
