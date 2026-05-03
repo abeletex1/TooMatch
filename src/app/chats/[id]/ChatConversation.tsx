@@ -253,9 +253,6 @@ export default function ChatConversation({
         ref={scrollRef}
         className="flex-1 flex flex-col overflow-y-auto px-4 pt-3 pb-2"
       >
-        {/* Espaciador: empuja los mensajes hacia abajo cuando son pocos */}
-        <div className="flex-1" />
-
         {(() => {
           const items: React.ReactNode[] = [];
           let lastDay = "";
