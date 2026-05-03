@@ -22,6 +22,7 @@ export default function ChatConversation({
   isUnmatched: boolean;
 }) {
   const router = useRouter();
+  const [tab, setTab] = useState<"chat" | "perfil">("chat");
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -29,7 +30,8 @@ export default function ChatConversation({
   const [unmatchOpen, setUnmatchOpen] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const channelRef = useRef<ReturnType<typeof createClient> extends { channel: (...args: unknown[]) => infer C } ? C : never>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const channelRef = useRef<any>(null);
   const partnerTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const myTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -37,46 +39,35 @@ export default function ChatConversation({
   const unlocked = totalMessages >= UNLOCK_AFTER_MESSAGES;
   const remaining = Math.max(0, UNLOCK_AFTER_MESSAGES - totalMessages);
 
-  function scrollToBottom(smooth = true) {
+  function scrollToBottom() {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "instant" });
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }
 
   useEffect(() => {
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
-  // Realtime: mensajes nuevos + indicador de escritura via broadcast
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
       .channel(`chat-${match.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `match_id=eq.${match.id}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as MessageRow;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            const updated = [...prev, newMsg];
-            if (
-              prev.length < UNLOCK_AFTER_MESSAGES &&
-              updated.length >= UNLOCK_AFTER_MESSAGES
-            ) {
-              setJustUnlocked(true);
-              setTimeout(() => setJustUnlocked(false), 4000);
-            }
-            return updated;
-          });
-          // Ocultar indicador de escritura cuando llega el mensaje
-          setPartnerTyping(false);
-        }
-      )
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "messages",
+        filter: `match_id=eq.${match.id}`,
+      }, (payload) => {
+        const newMsg = payload.new as MessageRow;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          const updated = [...prev, newMsg];
+          if (prev.length < UNLOCK_AFTER_MESSAGES && updated.length >= UNLOCK_AFTER_MESSAGES) {
+            setJustUnlocked(true);
+            setTimeout(() => setJustUnlocked(false), 4000);
+          }
+          return updated;
+        });
+        setPartnerTyping(false);
+      })
       .on("broadcast", { event: "typing" }, ({ payload }) => {
         if (payload.userId === currentUserId) return;
         setPartnerTyping(true);
@@ -85,8 +76,7 @@ export default function ChatConversation({
       })
       .subscribe();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (channelRef as any).current = channel;
+    channelRef.current = channel;
 
     return () => {
       supabase.removeChannel(channel);
@@ -95,53 +85,34 @@ export default function ChatConversation({
     };
   }, [match.id, currentUserId]);
 
-  // Scroll al llegar mensajes nuevos o al aparecer el indicador de escritura
-  useEffect(() => {
-    scrollToBottom();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length, partnerTyping]);
+  useEffect(() => { scrollToBottom(); }, [messages.length, partnerTyping]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInput(e.target.value);
-
-    // Broadcast typing con debounce para no saturar
     if (myTypingTimer.current) clearTimeout(myTypingTimer.current);
     myTypingTimer.current = setTimeout(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (channelRef as any).current?.send({
-        type: "broadcast",
-        event: "typing",
-        payload: { userId: currentUserId },
-      });
+      channelRef.current?.send({ type: "broadcast", event: "typing", payload: { userId: currentUserId } });
     }, 200);
   }
 
   function handleFocus() {
-    // Esperar a que el teclado termine de abrirse antes de hacer scroll
     setTimeout(() => scrollToBottom(), 350);
   }
 
   async function send() {
     const text = input.trim();
     if (!text || sending) return;
-
     setSending(true);
     setInput("");
 
     const tempId = `temp-${Date.now()}`;
     const optimistic: MessageRow = {
-      id: tempId,
-      match_id: match.id,
-      sender_id: currentUserId,
-      content: text,
-      created_at: new Date().toISOString(),
+      id: tempId, match_id: match.id, sender_id: currentUserId,
+      content: text, created_at: new Date().toISOString(),
     };
     setMessages((prev) => {
       const updated = [...prev, optimistic];
-      if (
-        prev.length < UNLOCK_AFTER_MESSAGES &&
-        updated.length >= UNLOCK_AFTER_MESSAGES
-      ) {
+      if (prev.length < UNLOCK_AFTER_MESSAGES && updated.length >= UNLOCK_AFTER_MESSAGES) {
         setJustUnlocked(true);
         setTimeout(() => setJustUnlocked(false), 4000);
       }
@@ -149,24 +120,17 @@ export default function ChatConversation({
     });
 
     const { error, messageId } = await sendMessageAction(match.id, text);
-
     if (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
     } else if (messageId) {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, id: messageId } : m))
-      );
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, id: messageId } : m)));
     }
-
     setSending(false);
   }
 
   function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
   async function confirmUnmatch(reason: string) {
@@ -175,185 +139,224 @@ export default function ChatConversation({
     router.push("/match");
   }
 
-  const headerInner = (
-    <>
-      <MatchAvatar
-        matchId={match.id}
-        initial={match.initial}
-        photoUrl={match.photos[0]}
-        size="sm"
-        unlocked={unlocked}
-      />
-      <div className="flex-1 min-w-0">
-        <span className="block font-serif text-[16px] text-ink leading-tight">
-          {match.name}
-        </span>
-        <span className="block text-[10px] text-ink-3 font-light">
-          {unlocked
-            ? "Toca para ver su perfil"
-            : `${remaining} mensaje${remaining === 1 ? "" : "s"} para conoceros más`}
-        </span>
-      </div>
-    </>
-  );
-
   return (
     <div className="flex flex-col bg-bg w-full overflow-hidden" style={{ height: "100dvh" }}>
-      {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 py-2.5 border-b-[0.5px] border-border bg-bg shrink-0">
-        <Link
-          href="/chats"
-          aria-label="Volver"
-          className="text-rose text-[22px] leading-none px-1 -ml-1 hover:opacity-70"
-        >
-          ←
-        </Link>
-        {unlocked ? (
-          <Link
-            href={`/match-profile/${match.id}?unlocked`}
-            className="flex items-center gap-2.5 flex-1 min-w-0 hover:opacity-90"
-          >
-            {headerInner}
+
+      {/* ── Header (siempre visible) ── */}
+      <div className="shrink-0 bg-bg border-b-[0.5px] border-border">
+        <div className="flex items-center gap-2.5 px-4 py-2.5">
+          <Link href="/chats" aria-label="Volver"
+            className="text-rose text-[22px] leading-none px-1 -ml-1 hover:opacity-70">
+            ←
           </Link>
-        ) : (
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            {headerInner}
+          <MatchAvatar matchId={match.id} initial={match.initial} photoUrl={match.photos[0]}
+            size="sm" unlocked={unlocked} />
+          <div className="flex-1 min-w-0">
+            <span className="block font-serif text-[16px] text-ink leading-tight">{match.name}</span>
+            <span className="block text-[10px] text-ink-3 font-light">
+              {unlocked ? "Desbloqueado" : `${remaining} mensaje${remaining === 1 ? "" : "s"} para desbloquear`}
+            </span>
           </div>
-        )}
+          <button onClick={() => setUnmatchOpen(true)} aria-label="Opciones"
+            className="text-ink-3 hover:text-ink-2 px-2 -mr-1 transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" />
+            </svg>
+          </button>
+        </div>
 
-        <button
-          onClick={() => setUnmatchOpen(true)}
-          aria-label="Opciones"
-          className="text-ink-3 hover:text-ink-2 px-2 -mr-1 transition-colors"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <circle cx="6" cy="12" r="1.6" />
-            <circle cx="12" cy="12" r="1.6" />
-            <circle cx="18" cy="12" r="1.6" />
-          </svg>
-        </button>
+        {/* Tabs Chat / Perfil */}
+        <div className="flex">
+          {(["chat", "perfil"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex-1 py-2 text-[13px] font-medium tracking-wide capitalize transition-colors relative ${
+                tab === t ? "text-ink" : "text-ink-3"
+              }`}>
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {tab === t && (
+                <span className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-rose rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Contador */}
-      <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
-        {totalMessages} / {UNLOCK_AFTER_MESSAGES} mensajes
-      </div>
+      {/* ── Tab: CHAT ── */}
+      {tab === "chat" && (
+        <>
+          {/* Contador */}
+          <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
+            {totalMessages} / {UNLOCK_AFTER_MESSAGES} mensajes
+          </div>
 
-      {/* Unlock badge */}
-      {justUnlocked && (
-        <div className="px-4 mt-2 shrink-0">
-          <div className="animate-fade-up bg-rose-light text-rose-dark border-[0.5px] border-rose-mid rounded-xl px-3.5 py-2.5 text-center font-serif italic text-[14px] leading-[1.4]">
-            ¡{UNLOCK_AFTER_MESSAGES} mensajes! Ya podéis veros — toca su nombre.
+          {justUnlocked && (
+            <div className="px-4 mt-2 shrink-0">
+              <div className="animate-fade-up bg-rose-light text-rose-dark border-[0.5px] border-rose-mid rounded-xl px-3.5 py-2.5 text-center font-serif italic text-[14px] leading-[1.4]">
+                ¡{UNLOCK_AFTER_MESSAGES} mensajes! Ya podéis veros.
+              </div>
+            </div>
+          )}
+
+          {/* Mensajes */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div className="flex flex-col justify-end min-h-full px-4 pt-3 pb-2">
+              {(() => {
+                const items: React.ReactNode[] = [];
+                let lastDay = "";
+                messages.forEach((m) => {
+                  const date = new Date(m.created_at);
+                  const dayKey = date.toDateString();
+                  const isMe = m.sender_id === currentUserId;
+                  if (dayKey !== lastDay) {
+                    lastDay = dayKey;
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const label = date.toDateString() === today.toDateString() ? "Hoy"
+                      : date.toDateString() === yesterday.toDateString() ? "Ayer"
+                      : date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+                    items.push(
+                      <div key={`day-${dayKey}`} className="flex items-center gap-3 my-3">
+                        <div className="flex-1 h-[0.5px] bg-bg-3" />
+                        <span className="text-[10px] text-ink-3 font-light">{label}</span>
+                        <div className="flex-1 h-[0.5px] bg-bg-3" />
+                      </div>
+                    );
+                  }
+                  const timeStr = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+                  items.push(
+                    <div key={m.id} className={`flex flex-col mb-1 ${isMe ? "items-end" : "items-start"}`}>
+                      <div className={`max-w-[78%] px-3.5 py-2.5 rounded-[18px] text-[13px] leading-[1.55] font-light ${
+                        isMe ? "bg-ink text-bg rounded-br-[4px]" : "bg-bg-2 text-ink rounded-bl-[4px]"
+                      }`}>{m.content}</div>
+                      <span className="text-[10px] text-ink-3 mt-0.5 px-1">{timeStr}</span>
+                    </div>
+                  );
+                });
+                return items;
+              })()}
+
+              {partnerTyping && (
+                <div className="flex flex-col items-start mb-1">
+                  <div className="flex items-center gap-[3px] px-3.5 py-3 bg-bg-2 rounded-[18px] rounded-bl-[4px]">
+                    <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "0ms" }} />
+                    <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "160ms" }} />
+                    <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "320ms" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="flex items-center gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
+            <input value={input} onChange={handleInputChange} onKeyDown={handleKey} onFocus={handleFocus}
+              placeholder="Escribe un mensaje…" disabled={sending}
+              className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[16px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60" />
+            <button onClick={send} disabled={!input.trim() || sending} aria-label="Enviar"
+              className="shrink-0 w-9 h-9 rounded-full bg-ink text-bg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity">
+              {sending ? <span className="text-[15px] leading-none">…</span> : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── Tab: PERFIL ── */}
+      {tab === "perfil" && (
+        <div className="flex-1 overflow-y-auto pb-6">
+          {/* Foto */}
+          <div className="relative w-full aspect-[3/4] bg-bg-2 overflow-hidden">
+            {match.photos[0] ? (
+              <img src={match.photos[0]} alt={match.name}
+                className={`w-full h-full object-cover transition-all duration-700 ${unlocked ? "" : "blur-2xl scale-105"}`} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="font-serif text-[80px] text-ink-3">{match.initial}</span>
+              </div>
+            )}
+            {!unlocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <div className="bg-bg/80 backdrop-blur-sm rounded-2xl px-5 py-3 text-center">
+                  <p className="font-serif italic text-[14px] text-ink">Foto bloqueada</p>
+                  <p className="text-[11px] text-ink-3 mt-1">{remaining} mensajes más para verla</p>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-5 pb-5 pt-12">
+              <p className="font-serif text-[24px] text-white font-medium">{match.name}</p>
+              {match.short && <p className="text-[13px] text-white/70 font-light">{match.short}</p>}
+            </div>
+          </div>
+
+          <div className="px-5 pt-5 flex flex-col gap-4">
+            {/* Compatibilidad */}
+            {match.compatibility > 0 && (
+              <div className="bg-rose-light border-[0.5px] border-rose-mid rounded-2xl px-4 py-3">
+                <p className="text-[10px] uppercase tracking-widest text-rose-dark mb-2">Compatibilidad</p>
+                <div className="flex items-center gap-3">
+                  <span className="font-serif text-[32px] text-rose font-medium leading-none">{match.compatibility}%</span>
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    {match.breakdown.map((b) => (
+                      <div key={b.label}>
+                        <div className="flex justify-between text-[10px] text-rose-dark mb-0.5">
+                          <span>{b.label}</span><span>{b.pct}%</span>
+                        </div>
+                        <div className="h-1 bg-rose-mid rounded-full overflow-hidden">
+                          <div className="h-full bg-rose rounded-full" style={{ width: `${b.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sobre él/ella */}
+            {match.self_description && (
+              <div className="bg-bg-2 rounded-2xl px-4 py-4">
+                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Sobre {match.name.split(" ")[0]}</p>
+                <p className="text-[14px] text-ink font-light leading-relaxed">{match.self_description}</p>
+              </div>
+            )}
+
+            {/* Valores */}
+            {match.values.length > 0 && (
+              <div className="bg-bg-2 rounded-2xl px-4 py-4">
+                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-3">Valores</p>
+                <div className="flex flex-wrap gap-2">
+                  {match.values.map((v) => (
+                    <span key={v} className={`px-3 py-1 rounded-full text-[12px] border-[0.5px] ${
+                      match.sharedTags.includes(v)
+                        ? "bg-rose-light text-rose-dark border-rose-mid font-medium"
+                        : "bg-bg border-border text-ink-2"
+                    }`}>{v}</span>
+                  ))}
+                </div>
+                {match.sharedTags.length > 0 && (
+                  <p className="text-[10px] text-rose-dark mt-2">
+                    {match.sharedTags.length} valor{match.sharedTags.length > 1 ? "es" : ""} en común
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Lo que busca */}
+            {match.partner_description && (
+              <div className="bg-bg-2 rounded-2xl px-4 py-4">
+                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Lo que busca</p>
+                <p className="text-[14px] text-ink font-light leading-relaxed">{match.partner_description}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Mensajes */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="flex flex-col justify-end min-h-full px-4 pt-3 pb-2">
-        {(() => {
-          const items: React.ReactNode[] = [];
-          let lastDay = "";
-
-          messages.forEach((m) => {
-            const date = new Date(m.created_at);
-            const dayKey = date.toDateString();
-            const isMe = m.sender_id === currentUserId;
-
-            // Separador de día
-            if (dayKey !== lastDay) {
-              lastDay = dayKey;
-              const today = new Date();
-              const yesterday = new Date(today);
-              yesterday.setDate(yesterday.getDate() - 1);
-              const label =
-                date.toDateString() === today.toDateString()
-                  ? "Hoy"
-                  : date.toDateString() === yesterday.toDateString()
-                  ? "Ayer"
-                  : date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
-
-              items.push(
-                <div key={`day-${dayKey}`} className="flex items-center gap-3 my-3">
-                  <div className="flex-1 h-[0.5px] bg-bg-3" />
-                  <span className="text-[10px] text-ink-3 font-light">{label}</span>
-                  <div className="flex-1 h-[0.5px] bg-bg-3" />
-                </div>
-              );
-            }
-
-            const timeStr = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-
-            items.push(
-              <div
-                key={m.id}
-                className={`flex flex-col mb-1 ${isMe ? "items-end" : "items-start"}`}
-              >
-                <div
-                  className={`max-w-[78%] px-3.5 py-2.5 rounded-[18px] text-[13px] leading-[1.55] font-light ${
-                    isMe
-                      ? "bg-ink text-bg rounded-br-[4px]"
-                      : "bg-bg-2 text-ink rounded-bl-[4px]"
-                  }`}
-                >
-                  {m.content}
-                </div>
-                <span className="text-[10px] text-ink-3 mt-0.5 px-1">{timeStr}</span>
-              </div>
-            );
-          });
-
-          return items;
-        })()}
-
-        {/* Indicador de escritura */}
-        {partnerTyping && (
-          <div className="flex flex-col items-start mb-1">
-            <div className="flex items-center gap-[3px] px-3.5 py-3 bg-bg-2 rounded-[18px] rounded-bl-[4px]">
-              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "0ms" }} />
-              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "160ms" }} />
-              <span className="w-[6px] h-[6px] rounded-full bg-ink-3 animate-typing-dot" style={{ animationDelay: "320ms" }} />
-            </div>
-          </div>
-        )}
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="flex items-center gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
-        <input
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKey}
-          onFocus={handleFocus}
-          placeholder="Escribe un mensaje…"
-          disabled={sending}
-          className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[16px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60"
-        />
-        <button
-          onClick={send}
-          disabled={!input.trim() || sending}
-          className="shrink-0 w-9 h-9 rounded-full bg-ink text-bg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
-          aria-label="Enviar"
-        >
-          {sending ? (
-            <span className="text-[15px] leading-none">…</span>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M22 2L11 13" />
-              <path d="M22 2L15 22 11 13 2 9l20-7z" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {/* Sheet de unmatch */}
-      <UnmatchSheet
-        matchName={match.name}
-        open={unmatchOpen}
-        onClose={() => setUnmatchOpen(false)}
-        onConfirm={confirmUnmatch}
-      />
+      <UnmatchSheet matchName={match.name} open={unmatchOpen}
+        onClose={() => setUnmatchOpen(false)} onConfirm={confirmUnmatch} />
     </div>
   );
 }

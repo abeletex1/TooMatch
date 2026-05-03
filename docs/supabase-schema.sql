@@ -139,6 +139,7 @@ create table if not exists public.matches (
   compatibility_score int  not null default 50 check (compatibility_score between 0 and 100),
   unmatched_by       uuid references auth.users(id),
   unmatch_reason     text,
+  notified_at        timestamptz,   -- cuándo se envió el email de notificación (null = pendiente)
   created_at         timestamptz not null default now(),
   constraint no_self_match check (user1_id != user2_id)
 );
