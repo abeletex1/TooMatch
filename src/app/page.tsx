@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,6 @@ import Divider from "@/components/ui/Divider";
 import GoogleIcon from "@/components/ui/GoogleIcon";
 
 export default function HomePage() {
-  const [googleMsg, setGoogleMsg] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,19 +38,10 @@ export default function HomePage() {
             Crear cuenta
           </p>
 
-          <button
-            type="button"
-            onClick={() => setGoogleMsg(true)}
-            className={buttonClasses("outline", true)}
-          >
+          <a href="/auth/google" className={buttonClasses("outline", true)}>
             <GoogleIcon size={18} />
             <span>Continuar con Google</span>
-          </button>
-          {googleMsg && (
-            <p className="text-[12px] text-ink-3 font-light text-center -mt-1">
-              Próximamente disponible
-            </p>
-          )}
+          </a>
 
           <Divider text="o con correo" />
 
