@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import OnboardingFlow from "./OnboardingFlow";
 
 /**
- * Onboarding — 7 pasos donde el usuario completa su perfil. Al terminar,
+ * Onboarding — 5 pasos donde el usuario completa su perfil. Al terminar,
  * la action saveProfileAction guarda todo en `profiles` y redirige a /day-0.
  *
  * Si no hay sesión → /login.
@@ -19,11 +19,17 @@ export default async function OnboardingPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed")
+    .select("onboarding_completed, gender, seeking, age")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (profile?.onboarding_completed) redirect("/match");
 
-  return <OnboardingFlow />;
+  return (
+    <OnboardingFlow
+      initialGender={(profile?.gender as "male" | "female" | "other" | null) ?? null}
+      initialSeeking={(profile?.seeking as "male" | "female" | "both" | null) ?? null}
+      initialAge={profile?.age ?? 28}
+    />
+  );
 }

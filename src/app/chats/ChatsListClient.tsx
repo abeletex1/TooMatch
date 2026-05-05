@@ -10,6 +10,7 @@ export type ChatRow = {
   name: string;
   preview: string;
   time: string;
+  hasUnread: boolean;
 };
 
 export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
@@ -41,12 +42,17 @@ export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
             size="sm"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] text-ink font-medium truncate">{c.name}</p>
-            <p className="text-[12px] text-ink-3 font-light truncate">
+            <p className={`text-[14px] truncate ${c.hasUnread ? "text-ink font-semibold" : "text-ink font-medium"}`}>
+              {c.name}
+            </p>
+            <p className={`text-[12px] font-light truncate ${c.hasUnread ? "text-ink-2" : "text-ink-3"}`}>
               {c.preview}
             </p>
           </div>
-          <span className="text-[10px] text-ink-3 shrink-0">{c.time}</span>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className="text-[10px] text-ink-3">{c.time}</span>
+            {c.hasUnread && <span className="w-[7px] h-[7px] rounded-full bg-rose" />}
+          </div>
         </Link>
       ))}
     </>

@@ -14,6 +14,7 @@ export type ProfileRow = {
   age_min: number;
   age_max: number;
   distance_km: number;
+  province: string | null;
   city: string | null;
   photos: string[];
   onboarding_completed: boolean;

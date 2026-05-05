@@ -64,6 +64,8 @@ export default async function ChatsPage() {
           minute: "2-digit",
         });
 
+    const hasUnread = !!lastMsg && lastMsg.sender_id !== user.id;
+
     chats.push({
       id: m.id,
       initial: name.charAt(0).toUpperCase(),
@@ -71,6 +73,7 @@ export default async function ChatsPage() {
       name,
       preview,
       time,
+      hasUnread,
     });
   }
 

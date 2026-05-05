@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Fondo crema -->
+  <rect width="512" height="512" fill="#FAF7F2" rx="80"/>
+
+  <!-- Grupo centrado: T + infinito -->
+  <!-- T serif -->
+  <text
+    x="154"
+    y="295"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="180"
+    font-weight="500"
+    fill="#1E1B17"
+    letter-spacing="-4"
+  >T</text>
+
+  <!-- Símbolo infinito en sage, alineado verticalmente con el centro de la T -->
+  <!-- viewBox original: 60x30, escalado a width=168 height=84 -->
+  <g transform="translate(248, 196) scale(2.8)">
+    <path
+      d="M 45 5 C 57.74 5 57.74 25 45 25 C 32.26 25 27.16 5 15 5 C 3.55 5 3.55 25 15 25 C 27.16 25 32.26 5 45 5 Z"
+      fill="none"
+      stroke="#6B8C7E"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- MATCH centrado bajo el logo -->
+  <text
+    x="285"
+    y="360"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="44"
+    font-weight="300"
+    fill="#A8A099"
+    letter-spacing="16"
+    text-anchor="middle"
+  >MATCH</text>
+</svg>

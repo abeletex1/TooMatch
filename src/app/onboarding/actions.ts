@@ -12,7 +12,8 @@ export type OnboardingPayload = {
   age: number;
   age_min: number;
   age_max: number;
-  distance_km: number;
+  province: string;
+  city: string;
   photos: string[];
 };
 
@@ -62,7 +63,8 @@ export async function saveProfileAction(
       age: payload.age,
       age_min: payload.age_min,
       age_max: payload.age_max,
-      distance_km: payload.distance_km,
+      province: payload.province,
+      city: payload.city,
       photos: payload.photos,
       onboarding_completed: true,
       day_number: 0,

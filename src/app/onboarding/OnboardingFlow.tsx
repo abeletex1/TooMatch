@@ -10,7 +10,7 @@ import { saveProfileAction, type OnboardingPayload } from "./actions";
 
 /* ===== Tipos y constantes ================================================ */
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 
 const VALUES_OPTIONS = [
   "Honestidad",
@@ -38,22 +38,70 @@ type Data = {
   age: number;
   age_min: number;
   age_max: number;
-  distance_km: number;
+  province: string;
+  city: string;
   photos: string[];
 };
 
-const DEFAULT_DATA: Data = {
-  self_description: "",
-  partner_description: "",
-  values: [],
-  gender: null,
-  seeking: null,
-  age: 28,
-  age_min: 22,
-  age_max: 38,
-  distance_km: 50,
-  photos: [],
+const PROVINCE_CITIES: Record<string, string[]> = {
+  "Álava": ["Vitoria-Gasteiz", "Llodio", "Amurrio", "Salvatierra", "Laguardia"],
+  "Albacete": ["Albacete", "Hellín", "Almansa", "Villarrobledo", "La Roda", "Caudete"],
+  "Alicante": ["Alicante", "Elche", "Torrevieja", "Orihuela", "Benidorm", "Alcoy", "Elda", "Denia", "Villena", "Petrer", "Santa Pola"],
+  "Almería": ["Almería", "Roquetas de Mar", "El Ejido", "Níjar", "Vícar", "Adra", "Berja", "Carboneras"],
+  "Asturias": ["Oviedo", "Gijón", "Avilés", "Siero", "Langreo", "Mieres", "Castrillón", "Llanes", "Cangas de Onís"],
+  "Ávila": ["Ávila", "Arenas de San Pedro", "Arévalo", "Sotillo de la Adrada", "Piedralaves"],
+  "Badajoz": ["Badajoz", "Mérida", "Don Benito", "Villanueva de la Serena", "Almendralejo", "Zafra", "Montijo"],
+  "Barcelona": ["Barcelona", "L'Hospitalet de Llobregat", "Badalona", "Terrassa", "Sabadell", "Mataró", "Cornellà de Llobregat", "Sant Cugat del Vallès", "Rubí", "Castelldefels", "Granollers", "Manresa", "Vic", "Igualada", "Vilanova i la Geltrú"],
+  "Burgos": ["Burgos", "Miranda de Ebro", "Aranda de Duero", "Medina de Pomar", "Briviesca"],
+  "Cáceres": ["Cáceres", "Plasencia", "Miajadas", "Navalmoral de la Mata", "Trujillo", "Moraleja"],
+  "Cádiz": ["Cádiz", "Jerez de la Frontera", "Algeciras", "La Línea de la Concepción", "San Fernando", "El Puerto de Santa María", "Chiclana de la Frontera", "Sanlúcar de Barrameda", "Rota", "Tarifa"],
+  "Cantabria": ["Santander", "Torrelavega", "Camargo", "Castro-Urdiales", "Piélagos", "El Astillero", "Laredo", "Santoña"],
+  "Castellón": ["Castellón de la Plana", "Vila-real", "Benicarló", "Vinaròs", "Onda", "Benicàssim", "Nules", "Almassora"],
+  "Ceuta": ["Ceuta"],
+  "Ciudad Real": ["Ciudad Real", "Puertollano", "Tomelloso", "Alcázar de San Juan", "Valdepeñas", "Manzanares", "Daimiel"],
+  "Córdoba": ["Córdoba", "Lucena", "Cabra", "Puente Genil", "Priego de Córdoba", "Montilla", "Peñarroya-Pueblonuevo", "Palma del Río"],
+  "Cuenca": ["Cuenca", "Tarancón", "Motilla del Palancar", "San Clemente", "Quintanar del Rey"],
+  "Girona": ["Girona", "Figueres", "Blanes", "Lloret de Mar", "Salt", "Olot", "Roses", "Palamós", "Palafrugell"],
+  "Granada": ["Granada", "Motril", "Almuñécar", "Loja", "Baza", "Armilla", "Maracena", "Albolote", "Guadix", "Pulianas"],
+  "Guadalajara": ["Guadalajara", "Azuqueca de Henares", "Cabanillas del Campo", "Alovera", "Molina de Aragón"],
+  "Guipúzcoa": ["Donostia-San Sebastián", "Irun", "Errenteria", "Zarautz", "Eibar", "Arrasate-Mondragón", "Hernani", "Tolosa"],
+  "Huelva": ["Huelva", "Lepe", "Almonte", "Cartaya", "Ayamonte", "Moguer", "Isla Cristina", "Palos de la Frontera"],
+  "Huesca": ["Huesca", "Monzón", "Barbastro", "Sabiñánigo", "Fraga", "Jaca"],
+  "Islas Baleares": ["Palma", "Ibiza", "Manacor", "Calvià", "Llucmajor", "Mahón", "Ciutadella de Menorca", "Marratxí", "Inca"],
+  "Jaén": ["Jaén", "Linares", "Úbeda", "Baeza", "Andújar", "Martos", "Alcalá la Real", "Jodar"],
+  "La Coruña": ["A Coruña", "Ferrol", "Santiago de Compostela", "Narón", "Oleiros", "Arteixo", "Betanzos", "Carballo", "Boiro"],
+  "La Rioja": ["Logroño", "Calahorra", "Arnedo", "Haro", "Lardero", "Nájera"],
+  "Las Palmas": ["Las Palmas de Gran Canaria", "Telde", "Santa Lucía de Tirajana", "San Bartolomé de Tirajana", "Arucas", "Gáldar", "Ingenio"],
+  "León": ["León", "Ponferrada", "San Andrés del Rabanedo", "Astorga", "La Bañeza", "Villaquilambre"],
+  "Lleida": ["Lleida", "Balaguer", "Tàrrega", "Mollerussa", "Cervera", "La Seu d'Urgell"],
+  "Lugo": ["Lugo", "Monforte de Lemos", "Sarria", "Vilalba", "Viveiro", "Burela"],
+  "Madrid": ["Madrid", "Móstoles", "Alcalá de Henares", "Fuenlabrada", "Leganés", "Getafe", "Alcorcón", "Torrejón de Ardoz", "Parla", "Alcobendas", "Rivas-Vaciamadrid", "Las Rozas de Madrid", "Pozuelo de Alarcón", "Majadahonda", "Boadilla del Monte", "Collado Villalba", "Arganda del Rey", "Aranjuez", "Valdemoro", "Tres Cantos", "San Sebastián de los Reyes", "Coslada"],
+  "Málaga": ["Málaga", "Marbella", "Vélez-Málaga", "Fuengirola", "Torremolinos", "Mijas", "Estepona", "Benalmádena", "Nerja", "Ronda", "Antequera", "Alhaurín el Grande", "Coín"],
+  "Melilla": ["Melilla"],
+  "Murcia": ["Murcia", "Cartagena", "Lorca", "Molina de Segura", "Alcantarilla", "Mazarrón", "San Javier", "Águilas", "Torre-Pacheco", "Yecla", "Cieza"],
+  "Navarra": ["Pamplona", "Tudela", "Barañain", "Burlada", "Estella-Lizarra", "Tafalla", "Sarriguren", "Berriozar"],
+  "Ourense": ["Ourense", "Verín", "O Barco de Valdeorras", "Xinzo de Limia", "O Carballiño"],
+  "Palencia": ["Palencia", "Guardo", "Aguilar de Campoo", "Venta de Baños"],
+  "Pontevedra": ["Vigo", "Pontevedra", "Vilagarcía de Arousa", "Redondela", "Marín", "Cangas", "Moaña", "Sanxenxo", "O Porriño"],
+  "Salamanca": ["Salamanca", "Béjar", "Ciudad Rodrigo", "Santa Marta de Tormes", "Carbajosa de la Sagrada"],
+  "Santa Cruz de Tenerife": ["Santa Cruz de Tenerife", "La Laguna", "Arona", "Adeje", "Puerto de la Cruz", "Los Realejos", "La Orotava", "Güímar", "Granadilla de Abona"],
+  "Segovia": ["Segovia", "Cuéllar", "El Espinar", "La Granja de San Ildefonso"],
+  "Sevilla": ["Sevilla", "Dos Hermanas", "Alcalá de Guadaíra", "Utrera", "La Rinconada", "Mairena del Aljarafe", "Écija", "Camas", "Bormujos", "Carmona", "Morón de la Frontera"],
+  "Soria": ["Soria", "Almazán", "El Burgo de Osma", "Ágreda"],
+  "Tarragona": ["Tarragona", "Reus", "Tortosa", "Salou", "Cambrils", "El Vendrell", "Calafell", "Valls"],
+  "Teruel": ["Teruel", "Alcañiz", "Andorra", "Utrillas", "Calamocha"],
+  "Toledo": ["Toledo", "Talavera de la Reina", "Illescas", "Seseña", "Torrijos", "Consuegra", "Ocaña", "Madridejos"],
+  "Valencia": ["Valencia", "Torrent", "Gandía", "Paterna", "Sagunto", "Alzira", "Burjassot", "Mislata", "Manises", "Ontinyent", "Xàtiva", "Cullera", "Sueca", "Requena"],
+  "Valladolid": ["Valladolid", "Medina del Campo", "Laguna de Duero", "Arroyo de la Encomienda", "Tordesillas"],
+  "Vizcaya": ["Bilbao", "Barakaldo", "Getxo", "Basauri", "Leioa", "Sestao", "Galdakao", "Erandio", "Durango", "Amorebieta"],
+  "Zamora": ["Zamora", "Benavente", "Toro", "Puebla de Sanabria"],
+  "Zaragoza": ["Zaragoza", "Calatayud", "Ejea de los Caballeros", "Tarazona", "Utebo", "Cuarte de Huerva"],
 };
+
+const PROVINCES = Object.keys(PROVINCE_CITIES).sort((a, b) =>
+  a.localeCompare(b, "es")
+);
+
 
 /* ===== Helpers presentacionales =========================================== */
 
@@ -331,92 +379,9 @@ function Step3({
   );
 }
 
-/* ===== Step 4: Identidad y orientación =================================== */
-
-function PrefBig({
-  selected,
-  onClick,
-  children,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-4 rounded-2xl text-[14px] text-center transition-colors ${
-        selected
-          ? "border-2 border-rose bg-rose-light text-rose-dark font-medium"
-          : "border-[1.5px] border-border-strong bg-bg text-ink-2 font-normal hover:bg-bg-2"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
+/* ===== Step 4: Rango de edad ============================================= */
 
 function Step4({
-  data,
-  update,
-}: {
-  data: Data;
-  update: (patch: Partial<Data>) => void;
-}) {
-  return (
-    <>
-      <StepHeader
-        step={4}
-        title="Sobre"
-        titleEm="ti"
-        subtitle="Necesitamos saber esto para que el match tenga sentido."
-      />
-
-      <p className="text-[12px] text-ink-2 mt-2 mb-2.5">Soy</p>
-      <div className="grid grid-cols-2 gap-2.5 mb-5">
-        <PrefBig
-          selected={data.gender === "male"}
-          onClick={() => update({ gender: "male" })}
-        >
-          Hombre
-        </PrefBig>
-        <PrefBig
-          selected={data.gender === "female"}
-          onClick={() => update({ gender: "female" })}
-        >
-          Mujer
-        </PrefBig>
-      </div>
-
-      <p className="text-[12px] text-ink-2 mb-2.5">Busco</p>
-      <div className="grid grid-cols-3 gap-2.5">
-        <PrefBig
-          selected={data.seeking === "male"}
-          onClick={() => update({ seeking: "male" })}
-        >
-          Hombres
-        </PrefBig>
-        <PrefBig
-          selected={data.seeking === "female"}
-          onClick={() => update({ seeking: "female" })}
-        >
-          Mujeres
-        </PrefBig>
-        <PrefBig
-          selected={data.seeking === "both"}
-          onClick={() => update({ seeking: "both" })}
-        >
-          Ambos
-        </PrefBig>
-      </div>
-    </>
-  );
-}
-
-/* ===== Step 5: Edad y rango ============================================== */
-
-function Step5({
   data,
   update,
 }: {
@@ -434,38 +399,10 @@ function Step5({
   return (
     <>
       <StepHeader
-        step={5}
-        title="Tu"
+        step={4}
+        title="Rango de"
         titleEm="edad"
-        subtitle="Y la franja de edad que buscas en tu match."
-      />
-
-      <div className="bg-bg-2 rounded-xl px-4 py-3 flex items-center gap-3 mb-5">
-        <label className="text-[13px] text-ink-2 flex-1 font-light">
-          Tengo
-        </label>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={18}
-          max={70}
-          value={data.age}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            if (v >= 18 && v <= 70) update({ age: v });
-          }}
-          className="text-[14px] font-medium text-ink w-[52px] text-right bg-transparent outline-none border-b border-rose [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-        <span className="text-[13px] text-ink-2 font-light">años</span>
-      </div>
-      <input
-        type="range"
-        min={18}
-        max={70}
-        value={data.age}
-        onChange={(e) => update({ age: Number(e.target.value) })}
-        className="w-full mb-6"
-        style={{ accentColor: "var(--color-rose)" }}
+        subtitle="¿Entre qué edades buscas a tu match?"
       />
 
       <p className="text-[12px] text-ink-2 mb-3">Busco entre</p>
@@ -503,76 +440,138 @@ function Step5({
   );
 }
 
-/* ===== Step 6: Distancia ================================================= */
+/* ===== Step 5: Ubicación ================================================= */
 
-function Step6({
+function Step5({
   data,
   update,
 }: {
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
-  // Recomendación fake basada en distancia (más adelante: real density).
-  let recTone: "good" | "warn" | "low" = "good";
-  let recText = "Buena densidad de usuarios en este radio.";
-  if (data.distance_km < 15) {
-    recTone = "low";
-    recText = "Pocos usuarios a esa distancia. Considera ampliar.";
-  } else if (data.distance_km > 100) {
-    recTone = "warn";
-    recText = "Radio muy grande, puede que viajes lejos a quedar.";
-  }
+  const [provinceSearch, setProvinceSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
 
-  const recColors = {
-    good: "bg-[#E8F5EE] border-[#7BBF9A]",
-    warn: "bg-[#FDF3DC] border-[#C4963A]",
-    low: "bg-rose-light border-rose",
-  };
-  const dotColors = {
-    good: "bg-[#3A9E6A]",
-    warn: "bg-[#C4963A]",
-    low: "bg-rose",
-  };
+  const filteredProvinces = provinceSearch.trim()
+    ? PROVINCES.filter((p) => p.toLowerCase().includes(provinceSearch.toLowerCase()))
+    : PROVINCES;
+
+  const cities = data.province ? (PROVINCE_CITIES[data.province] ?? []) : [];
+  const filteredCities = citySearch.trim()
+    ? cities.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase()))
+    : cities;
+
+  function selectProvince(p: string) {
+    update({ province: p, city: "" });
+    setProvinceSearch("");
+    setCitySearch("");
+  }
 
   return (
     <>
       <StepHeader
-        step={6}
-        title="¿A qué"
-        titleEm="distancia?"
-        subtitle="Define el radio máximo donde buscar matches."
+        step={5}
+        title="¿Dónde"
+        titleEm="estás?"
+        subtitle="Tu provincia y ciudad. Así encontramos matches cerca de ti."
       />
 
-      <p className="font-serif text-[38px] text-rose text-center mt-2 mb-1">
-        {data.distance_km} <span className="text-[20px]">km</span>
-      </p>
-      <input
-        type="range"
-        min={1}
-        max={200}
-        value={data.distance_km}
-        onChange={(e) => update({ distance_km: Number(e.target.value) })}
-        className="w-full mb-5"
-        style={{ accentColor: "var(--color-rose)" }}
-      />
+      {/* Provincia */}
+      <p className="text-[12px] text-ink-2 mb-2">Provincia</p>
+      {data.province ? (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[12px] bg-rose-light border-[0.5px] border-rose-mid text-rose-dark px-3 py-1 rounded-full font-light">
+            {data.province}
+          </span>
+          <button
+            type="button"
+            onClick={() => update({ province: "", city: "" })}
+            className="text-[11px] text-ink-3 hover:text-rose-dark"
+          >
+            Cambiar
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            type="text"
+            placeholder="Buscar provincia…"
+            value={provinceSearch}
+            onChange={(e) => setProvinceSearch(e.target.value)}
+            className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-1.5"
+          />
+          <div className="max-h-[160px] overflow-y-auto flex flex-col rounded-xl border-[0.5px] border-border bg-bg mb-4">
+            {filteredProvinces.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => selectProvince(p)}
+                className="text-left px-3.5 py-2 text-[13px] font-light text-ink-2 hover:bg-bg-2 transition-colors"
+              >
+                {p}
+              </button>
+            ))}
+            {filteredProvinces.length === 0 && (
+              <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">Sin resultados.</p>
+            )}
+          </div>
+        </>
+      )}
 
-      <div
-        className={`rounded-xl p-3 border-[0.5px] flex items-start gap-2.5 ${recColors[recTone]}`}
-      >
-        <div className={`w-[7px] h-[7px] rounded-full mt-[5px] ${dotColors[recTone]}`} />
-        <p className="text-[12px] text-ink font-light leading-[1.5]">
-          {recText}
-        </p>
-      </div>
+      {/* Ciudad — solo aparece tras elegir provincia */}
+      {data.province && (
+        <>
+          <p className="text-[12px] text-ink-2 mb-2">Ciudad</p>
+          {data.city ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] bg-rose-light border-[0.5px] border-rose-mid text-rose-dark px-3 py-1 rounded-full font-light">
+                {data.city}
+              </span>
+              <button
+                type="button"
+                onClick={() => update({ city: "" })}
+                className="text-[11px] text-ink-3 hover:text-rose-dark"
+              >
+                Cambiar
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                placeholder="Buscar ciudad…"
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-1.5"
+              />
+              <div className="max-h-[160px] overflow-y-auto flex flex-col rounded-xl border-[0.5px] border-border bg-bg">
+                {filteredCities.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { update({ city: c }); setCitySearch(""); }}
+                    className="text-left px-3.5 py-2 text-[13px] font-light text-ink-2 hover:bg-bg-2 transition-colors"
+                  >
+                    {c}
+                  </button>
+                ))}
+                {filteredCities.length === 0 && (
+                  <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">Sin resultados.</p>
+                )}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </>
   );
 }
 
-/* ===== Step 7: Fotos (subida real con Supabase Storage) ================== */
+/* ===== Step 6: Fotos (subida real con Supabase Storage) ================== */
 
 const MAX_PHOTOS = 6;
 
-function Step7({
+function Step6({
   data,
   update,
 }: {
@@ -646,7 +645,7 @@ function Step7({
   return (
     <>
       <StepHeader
-        step={7}
+        step={6}
         title="Tus"
         titleEm="fotos"
         subtitle="Hasta 6 fotos. La primera será tu foto principal."
@@ -728,9 +727,29 @@ function Step7({
 
 /* ===== Componente principal ============================================== */
 
-export default function OnboardingFlow() {
+export default function OnboardingFlow({
+  initialGender,
+  initialSeeking,
+  initialAge,
+}: {
+  initialGender: "male" | "female" | "other" | null;
+  initialSeeking: "male" | "female" | "both" | null;
+  initialAge: number;
+}) {
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<Data>(DEFAULT_DATA);
+  const [data, setData] = useState<Data>({
+    self_description: "",
+    partner_description: "",
+    values: [],
+    gender: initialGender,
+    seeking: initialSeeking,
+    age: initialAge,
+    age_min: 22,
+    age_max: 38,
+    province: "",
+    city: "",
+    photos: [],
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -747,12 +766,10 @@ export default function OnboardingFlow() {
       case 3:
         return data.values.length >= 1;
       case 4:
-        return data.gender !== null && data.seeking !== null;
-      case 5:
         return data.age_min < data.age_max;
+      case 5:
+        return data.province !== "" && data.city.trim() !== "";
       case 6:
-        return data.distance_km > 0;
-      case 7:
         return true; // fotos opcionales por ahora
       default:
         return true;
@@ -804,7 +821,6 @@ export default function OnboardingFlow() {
         {step === 4 && <Step4 data={data} update={update} />}
         {step === 5 && <Step5 data={data} update={update} />}
         {step === 6 && <Step6 data={data} update={update} />}
-        {step === 7 && <Step7 data={data} update={update} />}
 
         {error ? (
           <p className="text-[12px] text-rose-dark font-light mt-3">

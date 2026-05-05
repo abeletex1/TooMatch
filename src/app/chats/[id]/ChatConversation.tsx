@@ -64,6 +64,7 @@ export default function ChatConversation({
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
+
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
