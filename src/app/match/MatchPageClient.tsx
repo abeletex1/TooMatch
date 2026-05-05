@@ -9,7 +9,7 @@ import MatchAvatar from "@/components/ui/MatchAvatar";
 import CountUp from "@/components/ui/CountUp";
 import InfinitySymbol from "@/components/ui/InfinitySymbol";
 import { buttonClasses } from "@/components/ui/Button";
-import { UNLOCK_AFTER_MESSAGES } from "@/lib/mock/matches";
+import { MIN_MESSAGES_PER_USER } from "@/lib/mock/matches";
 import type { RealMatch } from "@/lib/types";
 
 export default function MatchPageClient({
@@ -126,7 +126,7 @@ function MatchHero({ match, scrollRef }: { match: RealMatch; scrollRef: React.Re
         <div className="w-[6px] h-[6px] rounded-full bg-rose shrink-0 mt-[6px]" />
         <p className="text-[12px] text-ink-2 font-light leading-[1.5]">
           <span className="text-ink">Su foto está borrosa.</span> Se desbloquea
-          cuando intercambiéis {UNLOCK_AFTER_MESSAGES} mensajes — la
+          cuando cada uno haya enviado {MIN_MESSAGES_PER_USER} mensajes — la
           conversación primero.
         </p>
       </div>

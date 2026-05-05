@@ -16,7 +16,7 @@ import {
   HeartIcon,
   CalendarIcon,
 } from "@/components/ui/icons";
-import { UNLOCK_AFTER_MESSAGES } from "@/lib/mock/matches";
+import { MIN_MESSAGES_PER_USER } from "@/lib/mock/matches";
 import { genderLabel, seekingLabel, type ProfileRow, type MatchRow } from "@/lib/types";
 
 export default async function MatchProfilePage({
@@ -64,7 +64,7 @@ export default async function MatchProfilePage({
   const p = partnerProfile as ProfileRow;
   const name = p.display_name?.trim() || "Perfil";
   const unlocked =
-    unlockedParam !== undefined || (messageCount ?? 0) >= UNLOCK_AFTER_MESSAGES;
+    unlockedParam !== undefined || (messageCount ?? 0) >= MIN_MESSAGES_PER_USER;
 
   return (
     <MobileShell>
@@ -177,8 +177,7 @@ export default async function MatchProfilePage({
                 ))}
               </div>
               <p className="text-[11px] text-ink-3 font-light text-center leading-[1.5]">
-                Las fotos se desbloquean al llegar a {UNLOCK_AFTER_MESSAGES}{" "}
-                mensajes intercambiados.
+                Las fotos se desbloquean cuando cada uno haya enviado al menos {MIN_MESSAGES_PER_USER} mensajes.
               </p>
             </>
           )}

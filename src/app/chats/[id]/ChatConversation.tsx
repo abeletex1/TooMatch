@@ -21,7 +21,7 @@ function ReadMoreText({ text }: { text: string }) {
     </div>
   );
 }
-import { UNLOCK_AFTER_MESSAGES } from "@/lib/mock/matches";
+import { MIN_MESSAGES_PER_USER } from "@/lib/mock/matches";
 import { createClient } from "@/lib/supabase/client";
 import { sendMessageAction, unmatchAction } from "./actions";
 import type { RealMatch, MessageRow } from "@/lib/types";
@@ -52,8 +52,11 @@ export default function ChatConversation({
   const myTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalMessages = messages.length;
-  const unlocked = totalMessages >= UNLOCK_AFTER_MESSAGES;
-  const remaining = Math.max(0, UNLOCK_AFTER_MESSAGES - totalMessages);
+  const myCount = messages.filter((m) => m.sender_id === currentUserId).length;
+  const partnerCount = messages.filter((m) => m.sender_id !== currentUserId).length;
+  const unlocked = myCount >= MIN_MESSAGES_PER_USER && partnerCount >= MIN_MESSAGES_PER_USER;
+  const myRemaining = Math.max(0, MIN_MESSAGES_PER_USER - myCount);
+  const partnerRemaining = Math.max(0, MIN_MESSAGES_PER_USER - partnerCount);
 
   function scrollToBottom() {
     const el = scrollRef.current;
@@ -77,7 +80,9 @@ export default function ChatConversation({
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev;
           const updated = [...prev, newMsg];
-          if (prev.length < UNLOCK_AFTER_MESSAGES && updated.length >= UNLOCK_AFTER_MESSAGES) {
+          const wasUnlocked = prev.filter((m) => m.sender_id === currentUserId).length >= MIN_MESSAGES_PER_USER && prev.filter((m) => m.sender_id !== currentUserId).length >= MIN_MESSAGES_PER_USER;
+          const isUnlocked = updated.filter((m) => m.sender_id === currentUserId).length >= MIN_MESSAGES_PER_USER && updated.filter((m) => m.sender_id !== currentUserId).length >= MIN_MESSAGES_PER_USER;
+          if (!wasUnlocked && isUnlocked) {
             setJustUnlocked(true);
             setTimeout(() => setJustUnlocked(false), 4000);
           }
@@ -129,7 +134,9 @@ export default function ChatConversation({
     };
     setMessages((prev) => {
       const updated = [...prev, optimistic];
-      if (prev.length < UNLOCK_AFTER_MESSAGES && updated.length >= UNLOCK_AFTER_MESSAGES) {
+      const wasUnlocked = prev.filter((m) => m.sender_id === currentUserId).length >= MIN_MESSAGES_PER_USER && prev.filter((m) => m.sender_id !== currentUserId).length >= MIN_MESSAGES_PER_USER;
+      const isUnlocked = updated.filter((m) => m.sender_id === currentUserId).length >= MIN_MESSAGES_PER_USER && updated.filter((m) => m.sender_id !== currentUserId).length >= MIN_MESSAGES_PER_USER;
+      if (!wasUnlocked && isUnlocked) {
         setJustUnlocked(true);
         setTimeout(() => setJustUnlocked(false), 4000);
       }
@@ -171,7 +178,7 @@ export default function ChatConversation({
           <div className="flex-1 min-w-0">
             <span className="block font-serif text-[16px] text-ink leading-tight">{match.name}</span>
             <span className="block text-[10px] text-ink-3 font-light">
-              {unlocked ? "Desbloqueado" : `${remaining} mensaje${remaining === 1 ? "" : "s"} para desbloquear`}
+              {unlocked ? "Desbloqueado" : `Tú ${myCount}/${MIN_MESSAGES_PER_USER} · Ellos ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
             </span>
           </div>
           <button onClick={() => setUnmatchOpen(true)} aria-label="Opciones"
@@ -202,14 +209,20 @@ export default function ChatConversation({
       {tab === "chat" && (
         <>
           {/* Contador */}
-          <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
-            {totalMessages} / {UNLOCK_AFTER_MESSAGES} mensajes
-          </div>
+          {!unlocked && (
+            <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
+              {myRemaining > 0 && `Tú: ${myCount}/${MIN_MESSAGES_PER_USER}`}
+              {myRemaining > 0 && partnerRemaining > 0 && " · "}
+              {partnerRemaining > 0 && `Tu match: ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
+              {myRemaining === 0 && partnerRemaining > 0 && " · Esperando que tu match escriba más"}
+              {myRemaining > 0 && partnerRemaining === 0 && " · Tu match ya está listo"}
+            </div>
+          )}
 
           {justUnlocked && (
             <div className="px-4 mt-2 shrink-0">
               <div className="animate-fade-up bg-rose-light text-rose-dark border-[0.5px] border-rose-mid rounded-xl px-3.5 py-2.5 text-center font-serif italic text-[14px] leading-[1.4]">
-                ¡{UNLOCK_AFTER_MESSAGES} mensajes! Ya podéis veros.
+                ¡Ya podéis veros! Las fotos están desbloqueadas.
               </div>
             </div>
           )}
@@ -299,7 +312,7 @@ export default function ChatConversation({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                 <div className="bg-bg/80 backdrop-blur-sm rounded-2xl px-5 py-3 text-center">
                   <p className="font-serif italic text-[14px] text-ink">Foto bloqueada</p>
-                  <p className="text-[11px] text-ink-3 mt-1">{remaining} mensajes más para verla</p>
+                  <p className="text-[11px] text-ink-3 mt-1">Tú {myCount}/{MIN_MESSAGES_PER_USER} · Ellos {partnerCount}/{MIN_MESSAGES_PER_USER}</p>
                 </div>
               </div>
             )}
