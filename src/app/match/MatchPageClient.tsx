@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import BottomNav from "@/components/ui/BottomNav";
@@ -39,6 +40,36 @@ export default function MatchPageClient({
 /* ===== Hero del match (cuando hay) ======================================= */
 
 function MatchHero({ match, scrollRef }: { match: RealMatch; scrollRef: React.RefObject<HTMLElement | null> }) {
+  const router = useRouter();
+  const [started, setStarted] = useState(false);
+
+  function handleStart() {
+    setStarted(true);
+    setTimeout(() => router.push(`/chats/${match.id}`), 2200);
+  }
+
+  if (started) {
+    return (
+      <main className="flex-1 flex flex-col items-center justify-center px-7 pb-3 text-center animate-fade-up">
+        <InfinitySymbol size={44} strokeWidth={2} />
+        <h2 className="font-serif text-[26px] text-ink font-medium leading-[1.2] mt-6">
+          Conversación{" "}
+          <em className="italic text-rose">iniciada.</em>
+        </h2>
+        <div className="w-9 h-[1.5px] bg-rose-mid rounded-sm my-5" />
+        <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[260px]">
+          Tu siguiente match será más certero.
+        </p>
+        <Link
+          href={`/chats/${match.id}`}
+          className="mt-8 text-[13px] text-rose font-light underline underline-offset-4"
+        >
+          Ir al chat →
+        </Link>
+      </main>
+    );
+  }
+
   return (
     <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 pt-4 pb-3">
       {/* Hero — reveal animado al entrar */}
@@ -131,12 +162,12 @@ function MatchHero({ match, scrollRef }: { match: RealMatch; scrollRef: React.Re
         </p>
       </div>
 
-      <Link
-        href={`/chats/${match.id}`}
+      <button
+        onClick={handleStart}
         className={`${buttonClasses("rose", true)} mt-2`}
       >
         Iniciar conversación →
-      </Link>
+      </button>
     </main>
   );
 }
