@@ -47,6 +47,7 @@ export type RealMatch = {
   breakdown: { label: string; pct: number }[]; // desglose para la card
   sharedTags: string[];                        // valores en común
   photos: string[];                            // fotos del partner
+  gender: "male" | "female" | "other" | null; // género del partner
   messageCount: number;                        // mensajes intercambiados
 };
 
@@ -157,6 +158,7 @@ export function buildRealMatch(
     breakdown: computeBreakdown(myProfile, partnerProfile),
     sharedTags: shared,
     photos: partnerProfile.photos,
+    gender: partnerProfile.gender,
     messageCount,
   };
 }

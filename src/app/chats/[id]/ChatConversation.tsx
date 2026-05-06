@@ -157,6 +157,9 @@ export default function ChatConversation({
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
+  const partnerPronoun =
+    match.gender === "female" ? "Ella" : match.gender === "male" ? "Él" : "Él/ella";
+
   async function confirmUnmatch(reason: string) {
     setUnmatchOpen(false);
     await unmatchAction(match.id, reason);
@@ -178,7 +181,7 @@ export default function ChatConversation({
           <div className="flex-1 min-w-0">
             <span className="block font-serif text-[16px] text-ink leading-tight">{match.name}</span>
             <span className="block text-[10px] text-ink-3 font-light">
-              {unlocked ? "Desbloqueado" : `Tú ${myCount}/${MIN_MESSAGES_PER_USER} · Él/ella ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
+              {unlocked ? "Desbloqueado" : `Tú ${myCount}/${MIN_MESSAGES_PER_USER} · ${partnerPronoun} ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
             </span>
           </div>
           <button onClick={() => setUnmatchOpen(true)} aria-label="Opciones"
@@ -312,7 +315,7 @@ export default function ChatConversation({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                 <div className="bg-bg/80 backdrop-blur-sm rounded-2xl px-5 py-3 text-center">
                   <p className="font-serif italic text-[14px] text-ink">Foto bloqueada</p>
-                  <p className="text-[11px] text-ink-3 mt-1">Tú {myCount}/{MIN_MESSAGES_PER_USER} · Él/ella {partnerCount}/{MIN_MESSAGES_PER_USER}</p>
+                  <p className="text-[11px] text-ink-3 mt-1">Tú {myCount}/{MIN_MESSAGES_PER_USER} · {partnerPronoun} {partnerCount}/{MIN_MESSAGES_PER_USER}</p>
                 </div>
               </div>
             )}
