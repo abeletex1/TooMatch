@@ -248,7 +248,10 @@ create policy "daily_answers_insert_own" on public.daily_answers
 -- Devuelve perfiles compatibles para el matching (SECURITY DEFINER para leer
 -- todos los perfiles onboarding_completed sin restricción de RLS).
 -- ============================================================================
-create or replace function public.find_compatible_profiles(for_user_id uuid)
+create or replace function public.find_compatible_profiles(
+  for_user_id     uuid,
+  strict_distance boolean default true
+)
 returns table (
   user_id             uuid,
   display_name        text,
@@ -260,9 +263,12 @@ returns table (
   age                 int,
   age_min             int,
   age_max             int,
+  distance_km         int,
+  province            text,
   city                text,
   photos              text[],
-  day_number          int
+  day_number          int,
+  relationship_intent text
 )
 language plpgsql
 security definer
@@ -271,7 +277,6 @@ as $$
 declare
   my_profile public.profiles%rowtype;
 begin
-  -- Obtener mi propio perfil
   select * into my_profile from public.profiles p where p.user_id = for_user_id;
   if not found then return; end if;
 
@@ -281,26 +286,37 @@ begin
       p.display_name,
       p.self_description,
       p.partner_description,
-      p."values"   as user_values,
+      p."values"          as user_values,
       p.gender,
       p.seeking,
       p.age,
       p.age_min,
       p.age_max,
+      p.distance_km,
+      p.province,
       p.city,
       p.photos,
-      p.day_number
+      p.day_number,
+      p.relationship_intent
     from public.profiles p
     where p.user_id <> for_user_id
       and p.onboarding_completed = true
-      -- Compatibilidad de orientación: yo busco su género, él busca el mío
+      -- Orientación: yo busco su género y él busca el mío
       and (my_profile.seeking = 'both' or my_profile.seeking = p.gender)
       and (p.seeking = 'both' or p.seeking = my_profile.gender)
-      -- Compatibilidad de edad: su edad está en mi rango y la mía en el suyo
+      -- Edad: su edad entra en mi rango y la mía en el suyo
       and (my_profile.age is null or p.age_min is null or my_profile.age >= p.age_min)
       and (my_profile.age is null or p.age_max is null or my_profile.age <= p.age_max)
       and (p.age is null or my_profile.age_min is null or p.age >= my_profile.age_min)
       and (p.age is null or my_profile.age_max is null or p.age <= my_profile.age_max)
+      -- Distancia: con strict_distance, ambos han de coincidir en provincia
+      -- Si alguno no tiene provincia, se acepta (sin dato no se puede filtrar)
+      and (
+        not strict_distance
+        or my_profile.province is null
+        or p.province is null
+        or my_profile.province = p.province
+      )
       -- No están ya emparejados (activo o pasado)
       and not exists (
         select 1 from public.matches m

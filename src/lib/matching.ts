@@ -49,11 +49,20 @@ export async function getAllActiveMatches(
 
   if (todaysUnmatch) return [];
 
-  // 3. Buscar candidatos compatibles vía RPC (SECURITY DEFINER)
-  const { data: candidates } = await supabase.rpc(
+  // 3. Buscar candidatos compatibles vía RPC — primero con filtro de provincia,
+  //    si no hay resultados se relaja la distancia (acepta toda España/país)
+  let { data: candidates } = await supabase.rpc(
     "find_compatible_profiles",
-    { for_user_id: userId }
+    { for_user_id: userId, strict_distance: true }
   );
+
+  if (!candidates || candidates.length === 0) {
+    const { data: relaxed } = await supabase.rpc(
+      "find_compatible_profiles",
+      { for_user_id: userId, strict_distance: false }
+    );
+    candidates = relaxed;
+  }
 
   if (!candidates || candidates.length === 0) return [];
 
@@ -66,7 +75,7 @@ export async function getAllActiveMatches(
 
   if (!myProfile) return [];
 
-  // 5. Ordenar por score y tomar el mejor
+  // 5. Normalizar: la RPC devuelve "user_values" para evitar conflicto con keyword SQL
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalized = (candidates as any[]).map((c) => ({
     ...c,
