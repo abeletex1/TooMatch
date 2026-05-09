@@ -24,6 +24,7 @@ export default async function OnboardingPage() {
     .maybeSingle();
 
   if (profile?.onboarding_completed) redirect("/match");
+  if (!profile?.gender || !profile?.seeking) redirect("/intro");
 
   return (
     <OnboardingFlow
