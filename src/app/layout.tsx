@@ -20,6 +20,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Too Match",
   description: "Stop likes. Start match.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Too Match",
+  },
 };
 
 export default function RootLayout({

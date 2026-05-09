@@ -9,6 +9,7 @@ import {
   type ProfileRow,
   type RealMatch,
 } from "@/lib/types";
+import { sendPushToUsers } from "@/lib/push";
 
 /**
  * Devuelve todos los matches activos del usuario (no deshechos).
@@ -112,6 +113,14 @@ export async function getAllActiveMatches(
     best.profile,
     0
   );
+
+  // Notificar a ambos usuarios
+  sendPushToUsers([userId, best.profile.user_id], {
+    title: "✦ Tienes un nuevo match",
+    body: "Alguien compatible con ti está esperando. Empieza la conversación.",
+    url: "/match",
+  });
+
   return [realMatch];
 }
 

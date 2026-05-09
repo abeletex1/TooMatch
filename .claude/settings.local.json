@@ -6,7 +6,14 @@
       "WebSearch",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npx supabase *)",
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(curl -s https://api.openai.com/v1/usage -H \"Authorization: Bearer $\\(grep OPENAI_API_KEY /c/Users/abele/TooMatchProject/too-match/.env.local)",
+      "Bash(nslookup -type=TXT toomatch.app 8.8.8.8)",
+      "Bash(nslookup -type=TXT _dmarc.toomatch.app 8.8.8.8)",
+      "Bash(npx web-push *)"
     ]
   }
 }

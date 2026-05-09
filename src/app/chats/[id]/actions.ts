@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendPushToUser } from "@/lib/push";
 
 /** Inserta un nuevo mensaje en la conversación */
 export async function sendMessageAction(
@@ -17,10 +19,9 @@ export async function sendMessageAction(
   if (!trimmed) return { error: "Mensaje vacío." };
   if (trimmed.length > 1000) return { error: "Mensaje demasiado largo." };
 
-  // Verificar que el usuario es participante del match
   const { data: match } = await supabase
     .from("matches")
-    .select("id, unmatched_by")
+    .select("id, user1_id, user2_id, unmatched_by")
     .eq("id", matchId)
     .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
     .maybeSingle();
@@ -35,6 +36,20 @@ export async function sendMessageAction(
     .single();
 
   if (error) return { error: error.message };
+
+  // Notificar al partner (sin await para no bloquear la respuesta)
+  const partnerId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+  const admin = createAdminClient();
+  admin.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle()
+    .then(({ data: myProfile }) => {
+      const name = myProfile?.display_name?.split(" ")[0] ?? "Tu match";
+      sendPushToUser(partnerId, {
+        title: `Nuevo mensaje de ${name}`,
+        body: trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed,
+        url: `/chats/${matchId}`,
+      });
+    });
+
   return { messageId: msg.id };
 }
 

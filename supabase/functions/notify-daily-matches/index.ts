@@ -98,32 +98,67 @@ function matchEmail(toName: string, matchName: string, appUrl: string): string {
 </html>`;
 }
 
-async function sendEmail(to: string, toName: string, matchName: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [to],
-      subject: `Hoy te hemos conectado con ${matchName}`,
-      html: matchEmail(toName, matchName, APP_URL),
-    }),
-  });
+async function sendEmail(to: string, toName: string, matchName: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: [to],
+        subject: `Hoy te hemos conectado con ${matchName}`,
+        html: matchEmail(toName, matchName, APP_URL),
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Resend error ${res.status}: ${body}`);
+    const body = await res.json();
+    if (!res.ok) {
+      const errMsg = `Resend error ${res.status}: ${JSON.stringify(body)}`;
+      console.error(`[sendEmail] FAILED to ${to}: ${errMsg}`);
+      return { ok: false, error: errMsg };
+    }
+
+    console.log(`[sendEmail] OK to ${to} (id: ${body.id})`);
+    return { ok: true };
+  } catch (err) {
+    const errMsg = String(err);
+    console.error(`[sendEmail] EXCEPTION to ${to}: ${errMsg}`);
+    return { ok: false, error: errMsg };
+  }
+}
+
+// Fetch all auth users handling pagination
+async function getAllAuthUsers() {
+  const allUsers: { id: string; email: string }[] = [];
+  let page = 1;
+  const perPage = 1000;
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      console.error(`[listUsers] Error on page ${page}:`, error);
+      break;
+    }
+    if (!data?.users?.length) break;
+
+    for (const u of data.users) {
+      allUsers.push({ id: u.id, email: u.email ?? "" });
+    }
+
+    if (data.users.length < perPage) break;
+    page++;
   }
 
-  return res.json();
+  console.log(`[listUsers] Total auth users fetched: ${allUsers.length}`);
+  return allUsers;
 }
 
 Deno.serve(async () => {
   try {
-    // Matches creados hoy que aún no han sido notificados
+    // Matches pending notification
     const { data: pendingMatches, error: fetchError } = await supabase
       .from("matches")
       .select("id, user1_id, user2_id")
@@ -132,27 +167,34 @@ Deno.serve(async () => {
 
     if (fetchError) throw fetchError;
     if (!pendingMatches || pendingMatches.length === 0) {
+      console.log("[notify] No pending matches");
       return new Response(JSON.stringify({ sent: 0, message: "No pending matches" }), {
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Obtener perfiles y emails de todos los usuarios involucrados
+    console.log(`[notify] Found ${pendingMatches.length} pending match(es)`);
+
     const userIds = [...new Set(pendingMatches.flatMap((m) => [m.user1_id, m.user2_id]))];
+    console.log(`[notify] User IDs involved: ${userIds.join(", ")}`);
 
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, display_name")
       .in("user_id", userIds);
 
-    const { data: authUsers } = await supabase.auth.admin.listUsers();
+    const authUsers = await getAllAuthUsers();
 
     const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p]));
-    const emailMap = Object.fromEntries(
-      (authUsers?.users ?? []).map((u) => [u.id, u.email ?? ""])
-    );
+    const emailMap = Object.fromEntries(authUsers.map((u) => [u.id, u.email]));
+
+    // Log what we found
+    for (const uid of userIds) {
+      console.log(`[notify] uid=${uid} profile=${profileMap[uid]?.display_name ?? "NOT FOUND"} email=${emailMap[uid] || "NOT FOUND"}`);
+    }
 
     let sent = 0;
+    const results: { matchId: string; email1: string; email2: string; sent1: boolean; sent2: boolean }[] = [];
     const notifiedIds: string[] = [];
 
     for (const match of pendingMatches) {
@@ -161,19 +203,31 @@ Deno.serve(async () => {
       const email1 = emailMap[match.user1_id];
       const email2 = emailMap[match.user2_id];
 
-      if (!p1 || !p2 || !email1 || !email2) continue;
+      if (!p1 || !p2) {
+        console.error(`[notify] Missing profile for match ${match.id}: p1=${!!p1} p2=${!!p2}`);
+        notifiedIds.push(match.id); // mark as notified to avoid retrying broken data
+        continue;
+      }
+      if (!email1 || !email2) {
+        console.error(`[notify] Missing email for match ${match.id}: email1=${email1 || "MISSING"} email2=${email2 || "MISSING"}`);
+        notifiedIds.push(match.id);
+        continue;
+      }
 
       const name1 = p1.display_name?.split(" ")[0] ?? "tú";
       const name2 = p2.display_name?.split(" ")[0] ?? "alguien especial";
 
-      await sendEmail(email1, name1, name2);
-      await sendEmail(email2, name2, name1);
+      const r1 = await sendEmail(email1, name1, name2);
+      const r2 = await sendEmail(email2, name2, name1);
 
+      if (r1.ok) sent++;
+      if (r2.ok) sent++;
+
+      results.push({ matchId: match.id, email1, email2, sent1: r1.ok, sent2: r2.ok });
       notifiedIds.push(match.id);
-      sent += 2;
     }
 
-    // Marcar como notificados
+    // Mark all processed matches as notified (even partial failures — to avoid retrying)
     if (notifiedIds.length > 0) {
       await supabase
         .from("matches")
@@ -181,12 +235,14 @@ Deno.serve(async () => {
         .in("id", notifiedIds);
     }
 
-    return new Response(JSON.stringify({ sent, matches: notifiedIds.length }), {
+    console.log(`[notify] Done. sent=${sent} matches=${notifiedIds.length}`);
+
+    return new Response(JSON.stringify({ sent, matches: notifiedIds.length, results }), {
       headers: { "Content-Type": "application/json" },
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("[notify] Fatal error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
