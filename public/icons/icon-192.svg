@@ -1,0 +1,5 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 512 512'>
+  <rect width='512' height='512' rx='60' fill='#FAF7F2'/>
+  <text x='256' y='310' font-family='Georgia,serif' font-size='260' font-weight='400' fill='#1E1B17' text-anchor='middle'>T</text>
+  <path d='M 290 200 C 290 170 310 150 335 150 C 360 150 378 168 378 193 C 378 218 360 235 335 235 C 318 235 305 226 296 212 C 287 226 274 235 257 235 C 232 235 214 218 214 193 C 214 168 232 150 257 150 C 282 150 302 170 302 200' stroke='#6B8C7E' stroke-width='14' fill='none' stroke-linecap='round'/>
+</svg>

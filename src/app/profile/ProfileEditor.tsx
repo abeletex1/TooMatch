@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/icons";
 import { logoutAction } from "@/app/logout/actions";
 import { updateProfileAction, resetOnboardingAction } from "./actions";
+import { usePush } from "@/lib/use-push";
 import { createClient } from "@/lib/supabase/client";
 
 const GENDER_LABEL: Record<string, string> = { male: "Hombre", female: "Mujer", other: "Otro" };
@@ -420,6 +421,9 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           {photoError && <p className="text-[11px] text-rose-dark mt-2 text-center">{photoError}</p>}
         </Card>
 
+        {/* Notificaciones */}
+        <PushToggle />
+
         {/* Acciones de cuenta */}
         <div className="flex items-center justify-center gap-5 pt-2 pb-3">
           <form action={logoutAction}>
@@ -558,5 +562,32 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
         onClose={() => setActiveSheet(null)}
       />
     </>
+  );
+}
+
+function PushToggle() {
+  const { supported, subscribed, loading, subscribe, unsubscribe } = usePush();
+  if (!supported) return null;
+
+  return (
+    <div className="flex items-center justify-between bg-bg-2 rounded-xl px-4 py-3 mb-3">
+      <div>
+        <p className="text-[13px] text-ink font-light">Notificaciones</p>
+        <p className="text-[11px] text-ink-3 font-light">
+          {subscribed ? "Activadas — recibirás matches y mensajes" : "Actívalas para no perderte nada"}
+        </p>
+      </div>
+      <button
+        onClick={subscribed ? unsubscribe : subscribe}
+        disabled={loading}
+        className={`relative w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-40 ${
+          subscribed ? "bg-rose" : "bg-bg-3"
+        }`}
+      >
+        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${
+          subscribed ? "left-6" : "left-1"
+        }`} />
+      </button>
+    </div>
   );
 }
