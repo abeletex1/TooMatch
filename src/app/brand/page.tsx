@@ -27,7 +27,7 @@ export default async function BrandPage() {
 
   return (
     <MobileShell>
-      <Topbar right="Día 0" />
+      <Topbar right="Día 0" back="/welcome" />
 
       <main className="flex flex-1 flex-col px-7 pt-8 pb-6 text-center">
         <div className="animate-fade-up flex-1 flex flex-col">
@@ -58,9 +58,6 @@ export default async function BrandPage() {
             className={`${buttonClasses("outline", true)} !py-9 !text-[14px]`}
           >
             Crear mi perfil →
-          </Link>
-          <Link href="/welcome" className={buttonClasses("outline", true)}>
-            ← Volver
           </Link>
         </div>
 
