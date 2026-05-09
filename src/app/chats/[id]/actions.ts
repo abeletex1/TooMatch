@@ -47,6 +47,9 @@ export async function sendMessageAction(
         title: `Nuevo mensaje de ${name}`,
         body: trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed,
         url: `/chats/${matchId}`,
+        type: "message",
+        senderName: name,
+        matchId,
       });
     });
 

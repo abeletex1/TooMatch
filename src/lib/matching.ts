@@ -20,12 +20,13 @@ export async function getAllActiveMatches(
 ): Promise<RealMatch[]> {
   const supabase = await createClient();
 
-  // 1. Todos los matches activos (sin limite)
+  // 1. Matches activos no vistos (sin limite)
   const { data: activeMatches } = await supabase
     .from("matches")
     .select("*")
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
     .is("unmatched_by", null)
+    .is("viewed_at", null)
     .order("created_at", { ascending: true });
 
   if (activeMatches && activeMatches.length > 0) {
@@ -119,6 +120,7 @@ export async function getAllActiveMatches(
     title: "✦ Tienes un nuevo match",
     body: "Alguien compatible con ti está esperando. Empieza la conversación.",
     url: "/match",
+    type: "match",
   });
 
   return [realMatch];
