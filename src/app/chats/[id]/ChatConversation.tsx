@@ -167,7 +167,7 @@ export default function ChatConversation({
   }
 
   return (
-    <div className="flex flex-col bg-bg w-full overflow-hidden relative" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-bg overflow-hidden fixed inset-0">
 
       {/* ── Header (siempre visible) ── */}
       <div className="shrink-0 bg-bg border-b-[0.5px] border-border">
