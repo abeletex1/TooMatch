@@ -70,6 +70,18 @@ function emailTemplate(title: string, body: string, ctaText: string, ctaUrl: str
 </html>`;
 }
 
+export async function sendWelcomeEmail(userEmail: string): Promise<void> {
+  await sendEmail(userEmail, {
+    subject: "Bienvenido a Too Match",
+    html: emailTemplate(
+      "Bienvenido.",
+      "Aquí no hay scroll infinito ni likes. Cada día te conectamos con una persona elegida con calma — por compatibilidad real, no por foto. Tu primer match está en camino.",
+      "Abrir Too Match →",
+      "/match"
+    ),
+  });
+}
+
 export async function sendMatchEmail(userId: string): Promise<void> {
   const email = await getUserEmail(userId);
   if (!email) return;

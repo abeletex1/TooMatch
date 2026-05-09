@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export type OnboardingPayload = {
   self_description: string;
@@ -73,6 +74,9 @@ export async function saveProfileAction(
   );
 
   if (error) return { error: `No se pudo guardar el perfil: ${error.message}` };
+
+  // Email de bienvenida (sin await para no bloquear el redirect)
+  if (user.email) sendWelcomeEmail(user.email);
 
   redirect("/day-0");
 }
