@@ -11,30 +11,30 @@ import {
 } from "@/lib/types";
 
 /**
- * Devuelve el match activo del usuario para hoy.
- * Si no existe ninguno, intenta crear uno nuevo buscando el candidato más
- * compatible. Devuelve null si no hay candidatos o si ya usó su match hoy.
+ * Devuelve todos los matches activos del usuario (no deshechos).
+ * Si no hay ninguno, intenta crear uno nuevo.
  */
-export async function getOrCreateTodaysMatch(
+export async function getAllActiveMatches(
   userId: string
-): Promise<RealMatch | null> {
+): Promise<RealMatch[]> {
   const supabase = await createClient();
 
-  // 1. ¿Hay un match activo (no deshecho)?
-  const { data: activeMatch } = await supabase
+  // 1. Todos los matches activos (sin limite)
+  const { data: activeMatches } = await supabase
     .from("matches")
     .select("*")
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
     .is("unmatched_by", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: true });
 
-  if (activeMatch) {
-    return resolveMatch(activeMatch as MatchRow, userId, supabase);
+  if (activeMatches && activeMatches.length > 0) {
+    const resolved = await Promise.all(
+      (activeMatches as MatchRow[]).map((m) => resolveMatch(m, userId, supabase))
+    );
+    return resolved.filter((m): m is RealMatch => m !== null);
   }
 
-  // 2. ¿Ya deshizo un match hoy? Si es así, no asignamos otro hasta mañana.
+  // 2. ¿Ya deshizo un match hoy? No asignamos otro hasta mañana.
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -47,7 +47,7 @@ export async function getOrCreateTodaysMatch(
     .limit(1)
     .maybeSingle();
 
-  if (todaysUnmatch) return null;
+  if (todaysUnmatch) return [];
 
   // 3. Buscar candidatos compatibles vía RPC (SECURITY DEFINER)
   const { data: candidates } = await supabase.rpc(
@@ -55,19 +55,18 @@ export async function getOrCreateTodaysMatch(
     { for_user_id: userId }
   );
 
-  if (!candidates || candidates.length === 0) return null;
+  if (!candidates || candidates.length === 0) return [];
 
-  // 4. Obtener mi propio perfil para calcular compatibilidad
+  // 4. Mi perfil
   const { data: myProfile } = await supabase
     .from("profiles")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (!myProfile) return null;
+  if (!myProfile) return [];
 
   // 5. Ordenar por score y tomar el mejor
-  // La RPC devuelve "user_values" (evitar conflicto con keyword SQL "values")
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalized = (candidates as any[]).map((c) => ({
     ...c,
@@ -95,7 +94,7 @@ export async function getOrCreateTodaysMatch(
     .select()
     .single();
 
-  if (error || !newMatch) return null;
+  if (error || !newMatch) return [];
 
   // 7. Incrementar day_number de ambos usuarios
   await admin
@@ -107,13 +106,21 @@ export async function getOrCreateTodaysMatch(
     .update({ day_number: (best.profile.day_number ?? 0) + 1 })
     .eq("user_id", best.profile.user_id);
 
-  const messageCount = 0;
-  return buildRealMatch(
+  const realMatch = buildRealMatch(
     newMatch as MatchRow,
     myProfile as ProfileRow,
     best.profile,
-    messageCount
+    0
   );
+  return [realMatch];
+}
+
+/** @deprecated Use getAllActiveMatches instead */
+export async function getOrCreateTodaysMatch(
+  userId: string
+): Promise<RealMatch | null> {
+  const matches = await getAllActiveMatches(userId);
+  return matches[0] ?? null;
 }
 
 /** Resuelve un match existente: obtiene el perfil del partner y el conteo de mensajes */

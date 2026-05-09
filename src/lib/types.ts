@@ -19,6 +19,7 @@ export type ProfileRow = {
   photos: string[];
   onboarding_completed: boolean;
   day_number: number;
+  relationship_intent: string | null;
 };
 
 export type MatchRow = {
@@ -29,6 +30,7 @@ export type MatchRow = {
   unmatched_by: string | null;
   unmatch_reason: string | null;
   created_at: string;
+  viewed_at: string | null;
 };
 
 /** Match completo con perfil del partner ya calculado */
@@ -49,6 +51,7 @@ export type RealMatch = {
   photos: string[];                            // fotos del partner
   gender: "male" | "female" | "other" | null; // género del partner
   messageCount: number;                        // mensajes intercambiados
+  isNew: boolean;                              // true si el usuario no lo ha visto aún
 };
 
 export type MessageRow = {
@@ -105,22 +108,42 @@ export function computeBreakdown(
   myProfile: ProfileRow,
   partnerProfile: ProfileRow
 ): { label: string; pct: number }[] {
+  // Valores — Jaccard similarity
   const shared = myProfile.values.filter((v) =>
     partnerProfile.values.includes(v)
   ).length;
   const union = new Set([...myProfile.values, ...partnerProfile.values]).size;
   const valuesPct = union > 0 ? Math.round((shared / union) * 100) : 50;
 
+  // Personalidad — proximidad de edad (proxy)
   const ageDiff =
     myProfile.age && partnerProfile.age
       ? Math.abs(myProfile.age - partnerProfile.age)
       : 8;
   const personalidadPct = Math.round(Math.max(60, 100 - ageDiff * 2));
 
+  // Lo que buscas — compatibilidad de intención
+  const myIntent = myProfile.relationship_intent;
+  const partnerIntent = partnerProfile.relationship_intent;
+  let intentPct = 75;
+  if (myIntent && partnerIntent) {
+    if (myIntent === partnerIntent) {
+      intentPct = 97;
+    } else {
+      const compatible: Record<string, string[]> = {
+        "Una relación seria": ["Conocer gente y ver qué pasa"],
+        "Conocer gente y ver qué pasa": ["Una relación seria", "Amistad", "Algo casual, sin compromiso"],
+        "Amistad": ["Conocer gente y ver qué pasa"],
+        "Algo casual, sin compromiso": ["Conocer gente y ver qué pasa"],
+      };
+      intentPct = compatible[myIntent]?.includes(partnerIntent) ? 72 : 45;
+    }
+  }
+
   return [
     { label: "Valores", pct: valuesPct },
     { label: "Personalidad", pct: personalidadPct },
-    { label: "Lo que buscas", pct: 84 },
+    { label: "Lo que buscas", pct: intentPct },
   ];
 }
 
@@ -160,5 +183,6 @@ export function buildRealMatch(
     photos: partnerProfile.photos,
     gender: partnerProfile.gender,
     messageCount,
+    isNew: !(matchRow as MatchRow).viewed_at,
   };
 }

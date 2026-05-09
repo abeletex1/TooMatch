@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateTodaysMatch } from "@/lib/matching";
+import { getAllActiveMatches } from "@/lib/matching";
 import MatchPageClient from "./MatchPageClient";
 
 export default async function MatchPage() {
@@ -18,11 +18,11 @@ export default async function MatchPage() {
 
   if (!profile?.onboarding_completed) redirect("/welcome");
 
-  const match = await getOrCreateTodaysMatch(user.id);
+  const matches = await getAllActiveMatches(user.id);
 
   return (
     <MatchPageClient
-      match={match}
+      matches={matches}
       dayNumber={profile.day_number || 1}
     />
   );
