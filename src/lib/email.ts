@@ -58,8 +58,8 @@ function emailTemplate(title: string, body: string, ctaText: string, ctaUrl: str
         </tr>
         <tr>
           <td style="padding:16px 32px 24px;text-align:center;border-top:0.5px solid #E8E0D4;">
-            <p style="margin:0;font-size:11px;color:#A8A099;font-family:Arial,sans-serif;">
-              Stop likes. Start match. · <a href="${base}/profile" style="color:#A8A099;">Gestionar notificaciones</a>
+            <p style="margin:0;font-size:11px;color:#A8A099;font-family:Arial,sans-serif;line-height:1.6;">
+              Stop likes. Start match.<br/>Si este email te ha llegado a spam, márcanos como "No es spam" — te enviaremos notificaciones importantes por aquí.
             </p>
           </td>
         </tr>
@@ -71,14 +71,95 @@ function emailTemplate(title: string, body: string, ctaText: string, ctaUrl: str
 }
 
 export async function sendWelcomeEmail(userEmail: string): Promise<void> {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.toomatch.app";
   await sendEmail(userEmail, {
-    subject: "Bienvenido a Too Match",
-    html: emailTemplate(
-      "Bienvenido.",
-      "Aquí no hay scroll infinito ni likes. Cada día te conectamos con una persona elegida con calma — por compatibilidad real, no por foto. Tu primer match está en camino.",
-      "Abrir Too Match →",
-      "/match"
-    ),
+    subject: "Bienvenido a Too Match. Esto no es Tinder.",
+    html: `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Too Match</title>
+</head>
+<body style="margin:0;padding:0;background-color:#FAF7F2;font-family:'Georgia',serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF7F2;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+          <tr>
+            <td align="center" style="padding-bottom:40px;">
+              <p style="margin:0;font-family:'Georgia',serif;font-size:28px;color:#1E1B17;letter-spacing:2px;">T<span style="color:#6B8C7E;font-size:32px;">∞</span></p>
+              <p style="margin:4px 0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:6px;color:#A8A099;text-transform:uppercase;">MATCH</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#FFFFFF;border-radius:20px;border:0.5px solid #E8E0D4;padding:44px 40px;">
+              <p style="margin:0 0 32px 0;font-family:'Georgia',serif;font-size:22px;font-weight:normal;color:#1E1B17;line-height:1.3;">
+                Te damos la bienvenida a Too Match.<br/>
+                <em style="color:#C4735A;">Esto no es Tinder.</em>
+              </p>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                <strong style="color:#1E1B17;font-weight:700;">Aquí no hay likes.</strong><br/>
+                No hay swipe.<br/>
+                No hay scroll infinito.
+              </p>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Y no estamos diseñados para que pierdas el tiempo.
+              </p>
+              <div style="height:1px;background-color:#F2EDE4;margin:24px 0;"></div>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Las apps de citas tradicionales ganan cuando <strong style="color:#1E1B17;font-weight:600;">no encuentras a nadie</strong>.<br/>
+                Cuanto más tiempo pasas ahí, mejor para ellas.
+              </p>
+              <p style="margin:0 0 24px 0;font-family:'Georgia',serif;font-size:18px;font-style:italic;color:#C4735A;line-height:1.4;">
+                Aquí no.
+              </p>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Too Match existe para lo contrario: que encuentres a <strong style="color:#1E1B17;font-weight:600;">la persona adecuada</strong> lo antes posible y no tengas que volver.
+              </p>
+              <div style="height:1px;background-color:#F2EDE4;margin:24px 0;"></div>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Recibirás matches basados en <strong style="color:#C4735A;font-weight:600;">compatibilidad real</strong>, no en quién consigue más atención.<br/>
+                Sin postureo. Sin algoritmos diseñados para engancharte.
+              </p>
+              <p style="margin:0 0 16px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Si haces tu parte, el sistema hará la suya.<br/>
+                Y, conforme pase el tiempo, <strong style="color:#1E1B17;font-weight:600;">mayores probabilidades tendrás de salir con pareja</strong>.
+              </p>
+              <p style="margin:0 0 32px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:300;color:#6B6258;line-height:1.8;">
+                Si funciona como debe, no solo te irás.<br/>
+                Lo recomendarás, ayudándote <strong style="color:#1E1B17;font-weight:600;">no solo a ti, sino también a mucha gente</strong>.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <a href="${base}/match"
+                      style="display:inline-block;background-color:#1E1B17;color:#FAF7F2;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:400;letter-spacing:1px;text-decoration:none;padding:14px 36px;border-radius:12px;">
+                      Entra a Too Match →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <div style="height:1px;background-color:#F2EDE4;margin-bottom:24px;"></div>
+              <p style="margin:0;font-family:'Georgia',serif;font-size:14px;font-style:italic;color:#A8A099;text-align:center;">
+                — Too Match
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#A8A099;font-weight:300;line-height:1.6;">
+                Stop likes. Start match.<br/>
+                Si este email te ha llegado a spam, márcanos como "No es spam".
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
   });
 }
 

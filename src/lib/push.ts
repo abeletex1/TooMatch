@@ -26,15 +26,14 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
 
-  // Sin suscripción push → fallback a email
-  if (!subs || subs.length === 0) {
-    if (payload.type === "match") {
-      sendMatchEmail(userId);
-    } else if (payload.type === "message" && payload.senderName && payload.matchId) {
-      sendMessageEmail(userId, payload.senderName, payload.body, payload.matchId);
-    }
-    return;
+  // Siempre mandar email como respaldo
+  if (payload.type === "match") {
+    sendMatchEmail(userId);
+  } else if (payload.type === "message" && payload.senderName && payload.matchId) {
+    sendMessageEmail(userId, payload.senderName, payload.body, payload.matchId);
   }
+
+  if (!subs || subs.length === 0) return;
 
   const results = await Promise.allSettled(
     subs.map((sub) =>

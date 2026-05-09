@@ -37,21 +37,19 @@ export async function sendMessageAction(
 
   if (error) return { error: error.message };
 
-  // Notificar al partner (sin await para no bloquear la respuesta)
+  // Notificar al partner
   const partnerId = match.user1_id === user.id ? match.user2_id : match.user1_id;
   const admin = createAdminClient();
-  admin.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle()
-    .then(({ data: myProfile }) => {
-      const name = myProfile?.display_name?.split(" ")[0] ?? "Tu match";
-      sendPushToUser(partnerId, {
-        title: `Nuevo mensaje de ${name}`,
-        body: trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed,
-        url: `/chats/${matchId}`,
-        type: "message",
-        senderName: name,
-        matchId,
-      });
-    });
+  const { data: myProfile } = await admin.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
+  const name = myProfile?.display_name?.split(" ")[0] ?? "Tu match";
+  await sendPushToUser(partnerId, {
+    title: `Nuevo mensaje de ${name}`,
+    body: trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed,
+    url: `/chats/${matchId}`,
+    type: "message",
+    senderName: name,
+    matchId,
+  });
 
   return { messageId: msg.id };
 }
