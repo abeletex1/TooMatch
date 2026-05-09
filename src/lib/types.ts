@@ -89,46 +89,27 @@ export function seekingLabel(seeking: string | null): string {
   return "No indicado";
 }
 
-/** Calcula un score de compatibilidad 0-100 entre dos perfiles */
-export function computeCompatibility(p1: ProfileRow, p2: ProfileRow): number {
-  // Valores compartidos (Jaccard * 100)
+// Pesos del score de compatibilidad — usados tanto en el breakdown como en el score global
+const WEIGHTS = { valores: 0.40, loquebuscas: 0.35, personalidad: 0.25 };
+
+/** Componentes internos del score, reutilizados por breakdown y compatibilidad */
+function scoreComponents(p1: ProfileRow, p2: ProfileRow) {
+  // Valores — Jaccard similarity
   const shared = p1.values.filter((v) => p2.values.includes(v)).length;
   const union = new Set([...p1.values, ...p2.values]).size;
-  const valueScore = union > 0 ? Math.round((shared / union) * 100) : 50;
-
-  // Cercanía de edad
-  const ageDiff = p1.age && p2.age ? Math.abs(p1.age - p2.age) : 10;
-  const ageScore = Math.max(0, 100 - ageDiff * 3);
-
-  return Math.round(valueScore * 0.65 + ageScore * 0.35);
-}
-
-/** Devuelve el desglose para la tarjeta hero del match */
-export function computeBreakdown(
-  myProfile: ProfileRow,
-  partnerProfile: ProfileRow
-): { label: string; pct: number }[] {
-  // Valores — Jaccard similarity
-  const shared = myProfile.values.filter((v) =>
-    partnerProfile.values.includes(v)
-  ).length;
-  const union = new Set([...myProfile.values, ...partnerProfile.values]).size;
-  const valuesPct = union > 0 ? Math.round((shared / union) * 100) : 50;
+  const valores = union > 0 ? Math.round((shared / union) * 100) : 50;
 
   // Personalidad — proximidad de edad (proxy)
-  const ageDiff =
-    myProfile.age && partnerProfile.age
-      ? Math.abs(myProfile.age - partnerProfile.age)
-      : 8;
-  const personalidadPct = Math.round(Math.max(60, 100 - ageDiff * 2));
+  const ageDiff = p1.age && p2.age ? Math.abs(p1.age - p2.age) : 8;
+  const personalidad = Math.round(Math.max(60, 100 - ageDiff * 2));
 
   // Lo que buscas — compatibilidad de intención
-  const myIntent = myProfile.relationship_intent;
-  const partnerIntent = partnerProfile.relationship_intent;
-  let intentPct = 75;
-  if (myIntent && partnerIntent) {
-    if (myIntent === partnerIntent) {
-      intentPct = 97;
+  const i1 = p1.relationship_intent;
+  const i2 = p2.relationship_intent;
+  let loquebuscas = 75;
+  if (i1 && i2) {
+    if (i1 === i2) {
+      loquebuscas = 97;
     } else {
       const compatible: Record<string, string[]> = {
         "Una relación seria": ["Conocer gente y ver qué pasa"],
@@ -136,14 +117,33 @@ export function computeBreakdown(
         "Amistad": ["Conocer gente y ver qué pasa"],
         "Algo casual, sin compromiso": ["Conocer gente y ver qué pasa"],
       };
-      intentPct = compatible[myIntent]?.includes(partnerIntent) ? 72 : 45;
+      loquebuscas = compatible[i1]?.includes(i2) ? 72 : 45;
     }
   }
 
+  return { valores, personalidad, loquebuscas };
+}
+
+/** Score 0-100 para el algoritmo de matching */
+export function computeCompatibility(p1: ProfileRow, p2: ProfileRow): number {
+  const { valores, personalidad, loquebuscas } = scoreComponents(p1, p2);
+  return Math.round(
+    valores * WEIGHTS.valores +
+    loquebuscas * WEIGHTS.loquebuscas +
+    personalidad * WEIGHTS.personalidad
+  );
+}
+
+/** Desglose visual — porcentajes derivados de los mismos componentes que el score global */
+export function computeBreakdown(
+  myProfile: ProfileRow,
+  partnerProfile: ProfileRow
+): { label: string; pct: number }[] {
+  const { valores, personalidad, loquebuscas } = scoreComponents(myProfile, partnerProfile);
   return [
-    { label: "Valores", pct: valuesPct },
-    { label: "Personalidad", pct: personalidadPct },
-    { label: "Lo que buscas", pct: intentPct },
+    { label: "Valores", pct: valores },
+    { label: "Personalidad", pct: personalidad },
+    { label: "Lo que buscas", pct: loquebuscas },
   ];
 }
 
@@ -177,7 +177,7 @@ export function buildRealMatch(
     self_description: partnerProfile.self_description ?? "",
     partner_description: partnerProfile.partner_description ?? "",
     values: partnerProfile.values,
-    compatibility: matchRow.compatibility_score,
+    compatibility: computeCompatibility(myProfile, partnerProfile),
     breakdown: computeBreakdown(myProfile, partnerProfile),
     sharedTags: shared,
     photos: partnerProfile.photos,
