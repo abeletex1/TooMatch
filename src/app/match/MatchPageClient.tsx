@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
@@ -21,104 +21,66 @@ export default function MatchPageClient({
   matches: RealMatch[];
   dayNumber: number;
 }) {
-  const scrollRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  // Track revealed state per match (keyed by match id)
   const [revealedIds, setRevealedIds] = useState<Set<string>>(
     () => new Set(matches.filter((m) => !m.isNew).map((m) => m.id))
   );
-  // Track which match is in the "started" transition
   const [startedId, setStartedId] = useState<string | null>(null);
 
-  const match = matches[currentIdx] ?? null;
   const total = matches.length;
+
+  // Actualizar índice según scroll vertical
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollTop / el.clientHeight);
+    setCurrentIdx(Math.min(idx, total - 1));
+  }, [total]);
 
   function revealMatch(id: string) {
     setRevealedIds((prev) => new Set([...prev, id]));
   }
 
-  const topbarRight =
-    total > 1
-      ? `${currentIdx + 1} / ${total}`
-      : `Día ${dayNumber}`;
+  const topbarRight = total > 1 ? `${currentIdx + 1} / ${total}` : `Día ${dayNumber}`;
+
+  if (total === 0) {
+    return (
+      <MobileShell>
+        <Topbar right={`Día ${dayNumber}`} />
+        <NoMatchToday />
+        <BottomNav />
+      </MobileShell>
+    );
+  }
 
   return (
     <MobileShell>
-      <Topbar right={topbarRight} scrollRef={scrollRef} />
+      <Topbar right={topbarRight} />
 
-      {match ? (
-        <>
-          <MatchHero
-            key={match.id}
-            match={match}
-            scrollRef={scrollRef}
-            revealed={revealedIds.has(match.id)}
-            onReveal={() => revealMatch(match.id)}
-            started={startedId === match.id}
-            onStart={() => setStartedId(match.id)}
-          />
-          {total > 1 && startedId !== match.id && (
-            <MatchNav
-              currentIdx={currentIdx}
-              total={total}
-              onPrev={() => setCurrentIdx((i) => Math.max(0, i - 1))}
-              onNext={() => setCurrentIdx((i) => Math.min(total - 1, i + 1))}
+      {/* Scroll vertical con snap — cada match ocupa el alto completo */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-scroll snap-y snap-mandatory"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {matches.map((match) => (
+          <div key={match.id} className="snap-start h-full shrink-0 flex flex-col">
+            <MatchHero
+              match={match}
+              revealed={revealedIds.has(match.id)}
+              onReveal={() => revealMatch(match.id)}
+              started={startedId === match.id}
+              onStart={() => setStartedId(match.id)}
+              showScrollHint={total > 1 && matches.indexOf(match) < total - 1}
             />
-          )}
-        </>
-      ) : (
-        <NoMatchToday />
-      )}
+          </div>
+        ))}
+      </div>
 
       <BottomNav />
     </MobileShell>
-  );
-}
-
-/* ===== Navegación entre matches =========================================== */
-
-function MatchNav({
-  currentIdx,
-  total,
-  onPrev,
-  onNext,
-}: {
-  currentIdx: number;
-  total: number;
-  onPrev: () => void;
-  onNext: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-3 pb-2 pt-1">
-      <button
-        onClick={onPrev}
-        disabled={currentIdx === 0}
-        className="w-8 h-8 flex items-center justify-center rounded-full text-ink-3 disabled:opacity-30 hover:text-ink transition-colors"
-        aria-label="Anterior"
-      >
-        ←
-      </button>
-      <div className="flex gap-1.5">
-        {Array.from({ length: total }).map((_, i) => (
-          <div
-            key={i}
-            className={`rounded-full transition-all duration-300 ${
-              i === currentIdx
-                ? "w-4 h-1.5 bg-rose"
-                : "w-1.5 h-1.5 bg-bg-3"
-            }`}
-          />
-        ))}
-      </div>
-      <button
-        onClick={onNext}
-        disabled={currentIdx === total - 1}
-        className="w-8 h-8 flex items-center justify-center rounded-full text-ink-3 disabled:opacity-30 hover:text-ink transition-colors"
-        aria-label="Siguiente"
-      >
-        →
-      </button>
-    </div>
   );
 }
 
@@ -126,26 +88,24 @@ function MatchNav({
 
 function MatchHero({
   match,
-  scrollRef,
   revealed,
   onReveal,
   started,
   onStart,
+  showScrollHint,
 }: {
   match: RealMatch;
-  scrollRef: React.RefObject<HTMLElement | null>;
   revealed: boolean;
   onReveal: () => void;
   started: boolean;
   onStart: () => void;
+  showScrollHint: boolean;
 }) {
   const router = useRouter();
+  const scrollRef = useRef<HTMLElement>(null);
 
-  // Marcar como visto en el primer render si es nuevo
   useEffect(() => {
-    if (match.isNew) {
-      markMatchViewedAction(match.id);
-    }
+    if (match.isNew) markMatchViewedAction(match.id);
   }, [match.id, match.isNew]);
 
   function handleStart() {
@@ -153,7 +113,6 @@ function MatchHero({
     setTimeout(() => router.push(`/chats/${match.id}`), 2200);
   }
 
-  // Pantalla de transición tras iniciar conversación
   if (started) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center px-7 pb-3 text-center animate-fade-up">
@@ -176,7 +135,6 @@ function MatchHero({
     );
   }
 
-  // Pantalla de reveal (nuevo match sin haber visto)
   if (!revealed) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center px-7 pb-3 text-center">
@@ -185,7 +143,6 @@ function MatchHero({
             ✦ Tienes un nuevo match ✦
           </p>
 
-          {/* Avatar borroso con glow pulsante */}
           <div className="flex justify-center mb-6">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-rose/20 animate-ping scale-110" />
@@ -200,9 +157,8 @@ function MatchHero({
             </div>
           </div>
 
-          <h2 className="font-serif text-[28px] font-medium text-ink mb-1">
-            {match.name}
-          </h2>
+          {/* Nombre oculto */}
+          <div className="h-5 w-28 bg-ink/10 rounded-full mx-auto mb-1 blur-[3px]" />
           <p className="text-[12px] text-ink-2 font-light mb-8">{match.short}</p>
 
           <button
@@ -216,7 +172,6 @@ function MatchHero({
     );
   }
 
-  // Pantalla normal del match (ya revelado)
   return (
     <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 pt-4 pb-3">
       {/* Hero */}
@@ -240,9 +195,8 @@ function MatchHero({
           />
         </div>
 
-        <h2 className="font-serif text-[24px] font-medium text-ink relative">
-          {match.name}
-        </h2>
+        {/* Nombre oculto — barra borrosa */}
+        <div className="h-6 w-32 bg-ink/10 rounded-full mx-auto mb-1 relative blur-[3px]" />
         <p className="text-[12px] text-ink-2 font-light mt-1 mb-4 relative">
           {match.short}
         </p>
@@ -315,6 +269,13 @@ function MatchHero({
       >
         Iniciar conversación →
       </button>
+
+      {/* Hint de scroll si hay más matches debajo */}
+      {showScrollHint && (
+        <p className="text-center text-[11px] text-ink-3 font-light mt-5 animate-bounce">
+          ↓ Más matches
+        </p>
+      )}
     </main>
   );
 }
