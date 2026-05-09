@@ -169,8 +169,8 @@ export async function sendMatchEmail(userId: string): Promise<void> {
   await sendEmail(email, {
     subject: "✦ Tienes un nuevo match en Too Match",
     html: emailTemplate(
-      "Nuevo match.",
-      "Hemos encontrado a alguien compatible contigo. Entra para descubrir quién es.",
+      "Tienes un nuevo match.",
+      "Alguien compatible contigo está esperando. Entra para descubrir quién es.",
       "Ver mi match →",
       "/match"
     ),
@@ -179,18 +179,16 @@ export async function sendMatchEmail(userId: string): Promise<void> {
 
 export async function sendMessageEmail(
   userId: string,
-  senderName: string,
-  preview: string,
   matchId: string
 ): Promise<void> {
   const email = await getUserEmail(userId);
   if (!email) return;
   await sendEmail(email, {
-    subject: `Nuevo mensaje de ${senderName}`,
+    subject: "Tienes un nuevo mensaje en Too Match",
     html: emailTemplate(
-      `${senderName} te ha escrito.`,
-      preview.length > 80 ? preview.slice(0, 77) + "…" : preview,
-      "Responder →",
+      "Tienes un nuevo mensaje.",
+      "Alguien te ha escrito. Entra para leerlo.",
+      "Leer mensaje →",
       `/chats/${matchId}`
     ),
   });

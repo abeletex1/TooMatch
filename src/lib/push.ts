@@ -29,8 +29,8 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   // Siempre mandar email como respaldo
   if (payload.type === "match") {
     sendMatchEmail(userId);
-  } else if (payload.type === "message" && payload.senderName && payload.matchId) {
-    sendMessageEmail(userId, payload.senderName, payload.body, payload.matchId);
+  } else if (payload.type === "message" && payload.matchId) {
+    sendMessageEmail(userId, payload.matchId);
   }
 
   if (!subs || subs.length === 0) return;
