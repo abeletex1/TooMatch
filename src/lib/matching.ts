@@ -123,7 +123,7 @@ export async function getOrCreateTodaysMatch(
   return matches[0] ?? null;
 }
 
-/** Resuelve un match existente: obtiene el perfil del partner y el conteo de mensajes */
+/** Resuelve un match existente: obtiene el perfil del partner, mensajes y respuestas diarias */
 async function resolveMatch(
   matchRow: MatchRow,
   userId: string,
@@ -133,22 +133,37 @@ async function resolveMatch(
   const partnerId =
     matchRow.user1_id === userId ? matchRow.user2_id : matchRow.user1_id;
 
-  const [{ data: partnerProfile }, { data: myProfile }, { count }] =
-    await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", partnerId).maybeSingle(),
-      supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
-      supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("match_id", matchRow.id),
-    ]);
+  const admin = createAdminClient();
+
+  const [
+    { data: partnerProfile },
+    { data: myProfile },
+    { count },
+    { data: myAnswersRaw },
+    { data: partnerAnswersRaw },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("user_id", partnerId).maybeSingle(),
+    supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .eq("match_id", matchRow.id),
+    admin.from("daily_answers").select("question_id, answer").eq("user_id", userId),
+    admin.from("daily_answers").select("question_id, answer").eq("user_id", partnerId),
+  ]);
 
   if (!partnerProfile || !myProfile) return null;
+
+  // Convertir a Record<questionId, answer>
+  const toMap = (rows: { question_id: string; answer: string }[] | null) =>
+    Object.fromEntries((rows ?? []).map((r) => [r.question_id, r.answer]));
 
   return buildRealMatch(
     matchRow,
     myProfile as ProfileRow,
     partnerProfile as ProfileRow,
-    count ?? 0
+    count ?? 0,
+    toMap(myAnswersRaw),
+    toMap(partnerAnswersRaw)
   );
 }

@@ -89,27 +89,36 @@ export function seekingLabel(seeking: string | null): string {
   return "No indicado";
 }
 
-// Pesos del score de compatibilidad — usados tanto en el breakdown como en el score global
-const WEIGHTS = { valores: 0.40, loquebuscas: 0.35, personalidad: 0.25 };
+// ─── Compatibilidad ─────────────────────────────────────────────────────────
+//
+// FILTROS OBLIGATORIOS (resueltos en find_compatible_profiles RPC):
+//   - género buscado coincide
+//   - distancia dentro del rango
+//
+// SCORE (solo si pasan los filtros):
+//   - Valores            40 %  — Jaccard sobre los valores declarados
+//   - Afinidad personal  40 %  — intención de relación (60 %) + cercanía de edad (40 %)
+//   - Preguntas del día  20 %  — % de respuestas iguales en preguntas que ambos contestaron
 
-/** Componentes internos del score, reutilizados por breakdown y compatibilidad */
-function scoreComponents(p1: ProfileRow, p2: ProfileRow) {
-  // Valores — Jaccard similarity
+/** Componentes internos — una sola fuente de verdad para score y breakdown */
+function scoreComponents(
+  p1: ProfileRow,
+  p2: ProfileRow,
+  answers1: Record<string, string> = {},
+  answers2: Record<string, string> = {}
+) {
+  // — Valores: Jaccard similarity —
   const shared = p1.values.filter((v) => p2.values.includes(v)).length;
   const union = new Set([...p1.values, ...p2.values]).size;
   const valores = union > 0 ? Math.round((shared / union) * 100) : 50;
 
-  // Personalidad — proximidad de edad (proxy)
-  const ageDiff = p1.age && p2.age ? Math.abs(p1.age - p2.age) : 8;
-  const personalidad = Math.round(Math.max(60, 100 - ageDiff * 2));
-
-  // Lo que buscas — compatibilidad de intención
+  // — Afinidad personal: intención (60%) + edad (40%) —
   const i1 = p1.relationship_intent;
   const i2 = p2.relationship_intent;
-  let loquebuscas = 75;
+  let intentScore = 70;
   if (i1 && i2) {
     if (i1 === i2) {
-      loquebuscas = 97;
+      intentScore = 97;
     } else {
       const compatible: Record<string, string[]> = {
         "Una relación seria": ["Conocer gente y ver qué pasa"],
@@ -117,33 +126,47 @@ function scoreComponents(p1: ProfileRow, p2: ProfileRow) {
         "Amistad": ["Conocer gente y ver qué pasa"],
         "Algo casual, sin compromiso": ["Conocer gente y ver qué pasa"],
       };
-      loquebuscas = compatible[i1]?.includes(i2) ? 72 : 45;
+      intentScore = compatible[i1]?.includes(i2) ? 72 : 40;
     }
   }
+  const ageDiff = p1.age && p2.age ? Math.abs(p1.age - p2.age) : 8;
+  const ageScore = Math.round(Math.max(55, 100 - ageDiff * 2));
+  const afinidad = Math.round(intentScore * 0.6 + ageScore * 0.4);
 
-  return { valores, personalidad, loquebuscas };
+  // — Preguntas del día: % de respuestas coincidentes —
+  const commonIds = Object.keys(answers1).filter((id) => answers2[id] !== undefined);
+  let preguntas = 50; // neutral si no hay datos
+  if (commonIds.length > 0) {
+    const matches = commonIds.filter((id) => answers1[id] === answers2[id]).length;
+    preguntas = Math.round((matches / commonIds.length) * 100);
+  }
+
+  return { valores, afinidad, preguntas };
 }
 
-/** Score 0-100 para el algoritmo de matching */
-export function computeCompatibility(p1: ProfileRow, p2: ProfileRow): number {
-  const { valores, personalidad, loquebuscas } = scoreComponents(p1, p2);
-  return Math.round(
-    valores * WEIGHTS.valores +
-    loquebuscas * WEIGHTS.loquebuscas +
-    personalidad * WEIGHTS.personalidad
-  );
+/** Score 0-100 para el algoritmo de matching (y para el headline del match card) */
+export function computeCompatibility(
+  p1: ProfileRow,
+  p2: ProfileRow,
+  answers1: Record<string, string> = {},
+  answers2: Record<string, string> = {}
+): number {
+  const { valores, afinidad, preguntas } = scoreComponents(p1, p2, answers1, answers2);
+  return Math.round(valores * 0.4 + afinidad * 0.4 + preguntas * 0.2);
 }
 
-/** Desglose visual — porcentajes derivados de los mismos componentes que el score global */
+/** Desglose visual — mismos componentes, mismos pesos */
 export function computeBreakdown(
   myProfile: ProfileRow,
-  partnerProfile: ProfileRow
+  partnerProfile: ProfileRow,
+  myAnswers: Record<string, string> = {},
+  partnerAnswers: Record<string, string> = {}
 ): { label: string; pct: number }[] {
-  const { valores, personalidad, loquebuscas } = scoreComponents(myProfile, partnerProfile);
+  const { valores, afinidad, preguntas } = scoreComponents(myProfile, partnerProfile, myAnswers, partnerAnswers);
   return [
     { label: "Valores", pct: valores },
-    { label: "Personalidad", pct: personalidad },
-    { label: "Lo que buscas", pct: loquebuscas },
+    { label: "Afinidad", pct: afinidad },
+    { label: "Preguntas", pct: preguntas },
   ];
 }
 
@@ -152,7 +175,9 @@ export function buildRealMatch(
   matchRow: MatchRow,
   myProfile: ProfileRow,
   partnerProfile: ProfileRow,
-  messageCount: number
+  messageCount: number,
+  myAnswers: Record<string, string> = {},
+  partnerAnswers: Record<string, string> = {}
 ): RealMatch {
   const name = profileToDisplayName(partnerProfile);
   const shared = myProfile.values.filter((v) =>
@@ -177,8 +202,8 @@ export function buildRealMatch(
     self_description: partnerProfile.self_description ?? "",
     partner_description: partnerProfile.partner_description ?? "",
     values: partnerProfile.values,
-    compatibility: computeCompatibility(myProfile, partnerProfile),
-    breakdown: computeBreakdown(myProfile, partnerProfile),
+    compatibility: computeCompatibility(myProfile, partnerProfile, myAnswers, partnerAnswers),
+    breakdown: computeBreakdown(myProfile, partnerProfile, myAnswers, partnerAnswers),
     sharedTags: shared,
     photos: partnerProfile.photos,
     gender: partnerProfile.gender,
