@@ -116,7 +116,7 @@ export async function getAllActiveMatches(
   );
 
   // Notificar a ambos usuarios
-  sendPushToUsers([userId, best.profile.user_id], {
+  await sendPushToUsers([userId, best.profile.user_id], {
     title: "✦ Tienes un nuevo match",
     body: "Alguien compatible con ti está esperando. Empieza la conversación.",
     url: "/match",
