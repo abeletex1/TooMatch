@@ -18,28 +18,29 @@ export default async function QuestionPage() {
     .maybeSingle();
   if (!profile?.onboarding_completed) redirect("/welcome");
 
-  // Pregunta del día (hoy o la más reciente pasada)
   const today = new Date().toISOString().split("T")[0];
-  const { data: question } = await supabase
+
+  // IDs de preguntas ya respondidas por el usuario
+  const { data: answers } = await supabase
+    .from("daily_answers")
+    .select("question_id")
+    .eq("user_id", user.id);
+  const answeredIds = (answers ?? []).map((a) => (a as { question_id: string }).question_id);
+
+  // Todas las preguntas pendientes hasta hoy (más antiguas primero)
+  let questionsQuery = supabase
     .from("daily_questions")
-    .select("*")
+    .select("id, question_text, options, active_date")
     .lte("active_date", today)
-    .order("active_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("active_date", { ascending: true });
 
-  // Respuesta ya enviada hoy (si existe)
-  const existingAnswer = question
-    ? await supabase
-        .from("daily_answers")
-        .select("answer")
-        .eq("user_id", user.id)
-        .eq("question_id", question.id)
-        .maybeSingle()
-        .then(({ data }) => data?.answer ?? null)
-    : null;
+  if (answeredIds.length > 0) {
+    questionsQuery = questionsQuery.not("id", "in", `(${answeredIds.join(",")})`);
+  }
 
-  // Historial de respuestas anteriores
+  const { data: pendingQuestions } = await questionsQuery;
+
+  // Historial de respuestas
   const { data: rawHistory } = await supabase
     .from("daily_answers")
     .select("answer, question_id, daily_questions(question_text, active_date)")
@@ -58,6 +59,13 @@ export default async function QuestionPage() {
     };
   }).filter((r) => r.question_text);
 
+  const questions = (pendingQuestions ?? []) as {
+    id: string;
+    question_text: string;
+    options: string[];
+    active_date: string;
+  }[];
+
   return (
     <MobileShell>
       <ScrollLayout topbarRight="Hoy">
@@ -70,21 +78,7 @@ export default async function QuestionPage() {
             <em className="italic text-rose">entenderte mejor</em>.
           </h1>
 
-          {question ? (
-            <DailyQuestion
-              questionId={question.id}
-              questionText={question.question_text}
-              options={question.options}
-              initialAnswer={existingAnswer}
-              history={history}
-            />
-          ) : (
-            <div className="bg-bg-2 rounded-2xl p-5 text-center">
-              <p className="font-serif italic text-[16px] text-ink-3">
-                La pregunta de hoy llega pronto.
-              </p>
-            </div>
-          )}
+          <DailyQuestion questions={questions} history={history} />
         </div>
       </ScrollLayout>
     </MobileShell>

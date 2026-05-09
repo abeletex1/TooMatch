@@ -22,7 +22,7 @@ export default async function Day0Page() {
   // Si todavía no acabaste el onboarding, no tienes nada que hacer aquí.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed")
+    .select("onboarding_completed, relationship_intent")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -59,7 +59,7 @@ export default async function Day0Page() {
         </p>
 
         <Link
-          href="/match"
+          href={profile?.relationship_intent ? "/match" : "/onboarding-question"}
           className={`${buttonClasses("rose", true)} mt-12`}
         >
           Ver mi inicio

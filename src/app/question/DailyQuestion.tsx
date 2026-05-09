@@ -3,6 +3,13 @@
 import { useState, useTransition } from "react";
 import { saveAnswerAction } from "./actions";
 
+type Question = {
+  id: string;
+  question_text: string;
+  options: string[];
+  active_date: string;
+};
+
 type HistoryItem = {
   question_text: string;
   answer: string;
@@ -10,44 +17,43 @@ type HistoryItem = {
 };
 
 export default function DailyQuestion({
-  questionId,
-  questionText,
-  options,
-  initialAnswer,
+  questions,
   history,
 }: {
-  questionId: string;
-  questionText: string;
-  options: string[];
-  initialAnswer: string | null;
+  questions: Question[];
   history: HistoryItem[];
 }) {
   const [tab, setTab] = useState<"hoy" | "historial">("hoy");
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [pending, setPending] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(initialAnswer);
   const [localHistory, setLocalHistory] = useState<HistoryItem[]>(history);
+  const [answered, setAnswered] = useState<string[]>([]); // IDs respondidas en esta sesión
   const [isPending, startTransition] = useTransition();
 
+  const remaining = questions.filter((q) => !answered.includes(q.id));
+  const current = remaining[0] ?? null;
+  const allDone = remaining.length === 0;
+
   function select(option: string) {
-    if (saved !== null || isPending) return;
+    if (isPending) return;
     setPending(option);
   }
 
   function submit() {
-    if (!pending) return;
+    if (!pending || !current) return;
     startTransition(async () => {
-      await saveAnswerAction(questionId, pending);
-      setSaved(pending);
-      // Añadir la respuesta al historial local para verla inmediatamente
+      await saveAnswerAction(current.id, pending);
       setLocalHistory((prev) => [
         {
-          question_text: questionText,
+          question_text: current.question_text,
           answer: pending,
-          active_date: new Date().toISOString().split("T")[0],
+          active_date: current.active_date,
         },
         ...prev,
       ]);
+      setAnswered((prev) => [...prev, current.id]);
       setPending(null);
+      setCurrentIdx((i) => i + 1);
     });
   }
 
@@ -66,21 +72,44 @@ export default function DailyQuestion({
                 : "text-ink-3 hover:text-ink-2"
             }`}
           >
-            {t === "hoy" ? "Hoy" : "Mis respuestas"}
+            {t === "hoy"
+              ? remaining.length > 1
+                ? `Pendientes (${remaining.length})`
+                : "Hoy"
+              : "Mis respuestas"}
           </button>
         ))}
       </div>
 
       {tab === "hoy" && (
         <>
-          {!saved ? (
+          {allDone ? (
+            <div className="animate-fade-up bg-rose-light border-[0.5px] border-rose-mid rounded-xl px-4 py-3.5 text-center">
+              <p className="font-serif italic text-[15px] text-rose-dark leading-[1.45]">
+                Al día. Mañana llegará otra pregunta —{" "}
+                <span className="text-rose">cada respuesta afina tus matches</span>.
+              </p>
+            </div>
+          ) : (
             <>
+              {remaining.length > 1 && (
+                <p className="text-[11px] text-ink-3 font-light mb-3">
+                  {remaining.length} preguntas pendientes · esta es la más antigua
+                </p>
+              )}
+
               <div className="bg-bg-2 rounded-2xl p-4 mb-3">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-ink-3 mb-2">
+                  {new Date(current!.active_date).toLocaleDateString("es-ES", {
+                    day: "numeric",
+                    month: "long",
+                  })}
+                </p>
                 <p className="font-serif italic text-[17px] text-ink leading-[1.45] mb-4">
-                  {questionText}
+                  {current!.question_text}
                 </p>
                 <div className="flex flex-col gap-2">
-                  {options.map((opt) => {
+                  {current!.options.map((opt) => {
                     const isPicked = pending === opt;
                     return (
                       <button
@@ -107,17 +136,14 @@ export default function DailyQuestion({
                   onClick={submit}
                   className="w-full py-3 rounded-xl bg-ink text-bg text-[13px] font-light disabled:opacity-40 transition-opacity mb-3"
                 >
-                  {isPending ? "Enviando…" : "Enviar respuesta →"}
+                  {isPending
+                    ? "Enviando…"
+                    : remaining.length > 1
+                    ? `Enviar y siguiente →`
+                    : "Enviar respuesta →"}
                 </button>
               )}
             </>
-          ) : (
-            <div className="animate-fade-up bg-rose-light border-[0.5px] border-rose-mid rounded-xl px-4 py-3.5 text-center">
-              <p className="font-serif italic text-[15px] text-rose-dark leading-[1.45]">
-                Anotado. Mañana otra pregunta —{" "}
-                <span className="text-rose">cada respuesta afina tus matches</span>.
-              </p>
-            </div>
           )}
         </>
       )}
