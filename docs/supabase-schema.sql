@@ -248,10 +248,7 @@ create policy "daily_answers_insert_own" on public.daily_answers
 -- Devuelve perfiles compatibles para el matching (SECURITY DEFINER para leer
 -- todos los perfiles onboarding_completed sin restricción de RLS).
 -- ============================================================================
-create or replace function public.find_compatible_profiles(
-  for_user_id     uuid,
-  strict_distance boolean default true
-)
+create or replace function public.find_compatible_profiles(for_user_id uuid)
 returns table (
   user_id             uuid,
   display_name        text,
@@ -309,14 +306,6 @@ begin
       and (my_profile.age is null or p.age_max is null or my_profile.age <= p.age_max)
       and (p.age is null or my_profile.age_min is null or p.age >= my_profile.age_min)
       and (p.age is null or my_profile.age_max is null or p.age <= my_profile.age_max)
-      -- Distancia: con strict_distance, ambos han de coincidir en provincia
-      -- Si alguno no tiene provincia, se acepta (sin dato no se puede filtrar)
-      and (
-        not strict_distance
-        or my_profile.province is null
-        or p.province is null
-        or my_profile.province = p.province
-      )
       -- No están ya emparejados (activo o pasado)
       and not exists (
         select 1 from public.matches m
