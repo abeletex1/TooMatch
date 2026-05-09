@@ -7,6 +7,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { logoutAction } from "@/app/logout/actions";
 import { createClient } from "@/lib/supabase/client";
 import { saveProfileAction, type OnboardingPayload } from "./actions";
+import { organizeTextAction, transcribeAndOrganizeAction } from "./ai-actions";
 
 /* ===== Tipos y constantes ================================================ */
 
@@ -194,6 +195,106 @@ function GuideChip({
   );
 }
 
+/* ===== AI Text Helper ==================================================== */
+
+function AiTextHelper({
+  text,
+  onUpdate,
+  field,
+}: {
+  text: string;
+  onUpdate: (t: string) => void;
+  field: "self" | "partner";
+}) {
+  const [loading, setLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function handleOrganize() {
+    setAiError(null);
+    setLoading(true);
+    const res = await organizeTextAction(text, field);
+    setLoading(false);
+    if (res.error) setAiError(res.error);
+    else if (res.text) onUpdate(res.text);
+  }
+
+  async function startRecording() {
+    setAiError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const fd = new FormData();
+        fd.append("audio", blob, "recording.webm");
+        setLoading(true);
+        const res = await transcribeAndOrganizeAction(fd, field);
+        setLoading(false);
+        if (res.error) setAiError(res.error);
+        else if (res.text) onUpdate(res.text);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setAiError("No se pudo acceder al micrófono.");
+    }
+  }
+
+  function stopRecording() {
+    recorderRef.current?.stop();
+    setRecording(false);
+  }
+
+  return (
+    <div className="mt-2">
+      <div className="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={recording ? stopRecording : startRecording}
+          disabled={loading}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border-[0.5px] transition-colors disabled:opacity-40 ${
+            recording
+              ? "bg-rose text-white border-rose"
+              : "bg-bg border-border-strong text-ink-2 hover:bg-bg-2"
+          }`}
+        >
+          {recording ? "⏹ Parar grabación" : "🎙 Grabar"}
+        </button>
+
+        {text.trim().length >= 10 && !recording && (
+          <button
+            type="button"
+            onClick={handleOrganize}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border-[0.5px] bg-bg border-border-strong text-ink-2 hover:bg-bg-2 disabled:opacity-40 transition-colors"
+          >
+            {loading ? "Procesando…" : "✦ Mejorar con IA"}
+          </button>
+        )}
+
+        {loading && (
+          <span className="text-[11px] text-ink-3 font-light self-center">
+            {recording ? "" : "La IA está redactando…"}
+          </span>
+        )}
+      </div>
+
+      {aiError && (
+        <p className="text-[11px] text-rose-dark font-light mt-1.5">{aiError}</p>
+      )}
+    </div>
+  );
+}
+
 /* ===== Step 1: ¿Quién eres? ============================================== */
 
 function Step1({
@@ -254,6 +355,7 @@ function Step1({
       >
         {text.length} / mín. {minChars}
       </p>
+      <AiTextHelper text={text} onUpdate={(t) => update({ self_description: t })} field="self" />
     </>
   );
 }
@@ -319,6 +421,7 @@ function Step2({
       >
         {text.length} / mín. {minChars}
       </p>
+      <AiTextHelper text={text} onUpdate={(t) => update({ partner_description: t })} field="partner" />
     </>
   );
 }
