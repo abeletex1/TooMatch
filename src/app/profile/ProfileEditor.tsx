@@ -234,6 +234,21 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [selectedPhotoIdx, setSelectedPhotoIdx] = useState<number | null>(null);
+
+  function handlePhotoTap(i: number) {
+    if (selectedPhotoIdx === null) {
+      setSelectedPhotoIdx(i);
+    } else if (selectedPhotoIdx === i) {
+      setSelectedPhotoIdx(null);
+    } else {
+      const newPhotos = [...profile.photos];
+      [newPhotos[selectedPhotoIdx], newPhotos[i]] = [newPhotos[i], newPhotos[selectedPhotoIdx]];
+      setProfile((p) => ({ ...p, photos: newPhotos }));
+      updateProfileAction({ photos: newPhotos });
+      setSelectedPhotoIdx(null);
+    }
+  }
 
   function triggerUpload(slot: number) {
     setPhotoError(null);
@@ -381,16 +396,25 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
         {/* Fotos inline */}
         <Card icon={<ImageIcon />} title="Mis fotos">
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          {selectedPhotoIdx !== null && (
+            <p className="text-[11px] text-rose font-light mb-2 text-center animate-fade-up">
+              Toca otra foto para intercambiarla
+            </p>
+          )}
           <div className="grid grid-cols-3 gap-1.5">
             {Array.from({ length: 6 }).map((_, i) => {
               const url = profile.photos[i];
               const isUploading = uploadingSlot === i;
               if (url) {
                 return (
-                  <div key={i} className="aspect-square rounded-[10px] bg-bg-2 overflow-hidden relative">
+                  <div key={i}
+                    onClick={() => handlePhotoTap(i)}
+                    className={`aspect-square rounded-[10px] bg-bg-2 overflow-hidden relative cursor-pointer transition-all ${
+                      selectedPhotoIdx === i ? "ring-2 ring-rose scale-95" : selectedPhotoIdx !== null ? "opacity-60" : ""
+                    }`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removePhoto(i)}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); removePhoto(i); setSelectedPhotoIdx(null); }}
                       className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-ink/80 text-bg text-[12px] flex items-center justify-center">
                       ×
                     </button>
@@ -405,7 +429,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
               return (
                 <button key={i} type="button"
                   disabled={isUploading || uploadingSlot !== null}
-                  onClick={() => triggerUpload(i)}
+                  onClick={() => { setSelectedPhotoIdx(null); triggerUpload(i); }}
                   className="aspect-square rounded-[10px] border-[0.5px] border-dashed border-border-strong bg-bg-2 flex flex-col items-center justify-center gap-1 hover:bg-bg-3 disabled:opacity-50 transition-colors">
                   {isUploading
                     ? <span className="text-[11px] text-rose">Subiendo…</span>

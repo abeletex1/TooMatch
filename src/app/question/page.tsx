@@ -19,6 +19,8 @@ export default async function QuestionPage() {
   if (!profile?.onboarding_completed) redirect("/welcome");
 
   const today = new Date().toISOString().split("T")[0];
+  // Solo preguntas desde el día que se registró el usuario
+  const signupDate = user.created_at.split("T")[0];
 
   // IDs de preguntas ya respondidas por el usuario
   const { data: answers } = await supabase
@@ -27,10 +29,11 @@ export default async function QuestionPage() {
     .eq("user_id", user.id);
   const answeredIds = (answers ?? []).map((a) => (a as { question_id: string }).question_id);
 
-  // Todas las preguntas pendientes hasta hoy (más antiguas primero)
+  // Preguntas pendientes desde el día de registro hasta hoy (más antiguas primero)
   let questionsQuery = supabase
     .from("daily_questions")
     .select("id, question_text, options, active_date")
+    .gte("active_date", signupDate)
     .lte("active_date", today)
     .order("active_date", { ascending: true });
 

@@ -684,6 +684,20 @@ function Step6({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+
+  function handlePhotoTap(i: number) {
+    if (selectedIdx === null) {
+      setSelectedIdx(i);
+    } else if (selectedIdx === i) {
+      setSelectedIdx(null);
+    } else {
+      const newPhotos = [...data.photos];
+      [newPhotos[selectedIdx], newPhotos[i]] = [newPhotos[i], newPhotos[selectedIdx]];
+      update({ photos: newPhotos });
+      setSelectedIdx(null);
+    }
+  }
 
   function openPicker() {
     setUploadError(null);
@@ -768,17 +782,25 @@ function Step6({
         onChange={handleFileChange}
       />
 
+      {selectedIdx !== null && (
+        <p className="text-[11px] text-rose font-light mb-2 text-center animate-fade-up">
+          Toca otra foto para intercambiarla
+        </p>
+      )}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {data.photos.map((url, i) => (
           <div
             key={url}
-            className="aspect-square rounded-xl bg-bg-2 overflow-hidden relative"
+            onClick={() => handlePhotoTap(i)}
+            className={`aspect-square rounded-xl bg-bg-2 overflow-hidden relative cursor-pointer transition-all ${
+              selectedIdx === i ? "ring-2 ring-rose scale-95" : selectedIdx !== null ? "opacity-60" : ""
+            }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => removePhoto(i)}
+              onClick={(e) => { e.stopPropagation(); removePhoto(i); setSelectedIdx(null); }}
               className="absolute top-1.5 right-1.5 w-[20px] h-[20px] rounded-full bg-ink/90 text-bg text-[12px] flex items-center justify-center hover:bg-ink"
               aria-label="Quitar foto"
             >
