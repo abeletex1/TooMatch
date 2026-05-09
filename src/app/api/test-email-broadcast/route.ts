@@ -23,12 +23,9 @@ export async function GET() {
     .map((u) => u.email)
     .filter((e): e is string => !!e);
 
-  // Resend acepta hasta 50 destinatarios por llamada — enviamos en lotes
-  const BATCH = 50;
   const results: { ok: number; failed: number } = { ok: 0, failed: 0 };
 
-  for (let i = 0; i < emails.length; i += BATCH) {
-    const batch = emails.slice(i, i + BATCH);
+  for (const email of emails) {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -37,7 +34,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         from: "Too Match <hola@toomatch.app>",
-        to: batch,
+        to: [email],
         subject: "✦ Tu primer match llega pronto — Too Match",
         html: `<!DOCTYPE html>
 <html lang="es">
@@ -78,8 +75,8 @@ export async function GET() {
       }),
     });
 
-    if (res.ok) results.ok += batch.length;
-    else results.failed += batch.length;
+    if (res.ok) results.ok++;
+    else results.failed++;
   }
 
   return NextResponse.json({ ...results, total: emails.length });
