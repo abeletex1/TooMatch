@@ -14,20 +14,49 @@ import { organizeTextAction, transcribeAndOrganizeAction } from "./ai-actions";
 const TOTAL_STEPS = 6;
 
 const VALUES_OPTIONS = [
+  // Carácter
   "Honestidad",
   "Humor",
   "Curiosidad",
   "Empatía",
-  "Aventura",
-  "Calma",
-  "Ambición",
   "Lealtad",
+  "Ambición",
+  "Calma",
   "Creatividad",
-  "Familia",
-  "Cultura",
-  "Deporte",
+  "Independencia",
+  "Generosidad",
+
+  // Estilo de vida
+  "Aventura",
   "Naturaleza",
+  "Deporte",
+  "Viajes",
+  "Vida nocturna",
+  "Tranquilidad",
+  "Familia",
+  "Animales",
+  "Gastronomía",
+
+  // Visión del mundo
+  "Progresista",
+  "Conservador",
+  "Libertad individual",
+  "Justicia social",
+  "Feminismo",
   "Espiritualidad",
+  "Ciencia y razón",
+  "Tradición",
+  "Sostenibilidad",
+
+  // Cultura e intereses
+  "Cultura",
+  "Tecnología",
+  "Música",
+  "Arte",
+  "Literatura",
+  "Cine",
+  "Emprendimiento",
+  "Política",
 ];
 
 type Data = {
@@ -435,7 +464,7 @@ function Step3({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
-  const max = 4;
+  const max = 6;
 
   function toggle(value: string) {
     const isSelected = data.values.includes(value);
