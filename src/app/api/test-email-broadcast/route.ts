@@ -24,16 +24,9 @@ export async function GET() {
     .map((u) => u.email)
     .filter((e): e is string => !!e);
 
-  const results: { ok: number; failed: number } = { ok: 0, failed: 0 };
+  const settled = await Promise.allSettled(emails.map((email) => sendWelcomeEmail(email)));
+  const ok = settled.filter((r) => r.status === "fulfilled").length;
+  const failed = settled.filter((r) => r.status === "rejected").length;
 
-  for (const email of emails) {
-    try {
-      await sendWelcomeEmail(email);
-      results.ok++;
-    } catch {
-      results.failed++;
-    }
-  }
-
-  return NextResponse.json({ ...results, total: emails.length });
+  return NextResponse.json({ ok, failed, total: emails.length });
 }
