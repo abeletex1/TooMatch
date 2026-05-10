@@ -50,12 +50,12 @@ export default async function MatchProfilePage({
       ? (matchRow as MatchRow).user2_id
       : (matchRow as MatchRow).user1_id;
 
-  // Perfil del partner + conteo de mensajes en paralelo
-  const [{ data: partnerProfile }, { count: messageCount }] = await Promise.all([
+  // Perfil del partner + mensajes en paralelo
+  const [{ data: partnerProfile }, { data: allMessages }] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", partnerId).maybeSingle(),
     supabase
       .from("messages")
-      .select("*", { count: "exact", head: true })
+      .select("sender_id")
       .eq("match_id", matchId),
   ]);
 
@@ -63,8 +63,11 @@ export default async function MatchProfilePage({
 
   const p = partnerProfile as ProfileRow;
   const name = p.display_name?.trim() || "Perfil";
+  const myMsgCount = (allMessages ?? []).filter((m) => m.sender_id === user.id).length;
+  const partnerMsgCount = (allMessages ?? []).filter((m) => m.sender_id === partnerId).length;
   const unlocked =
-    unlockedParam !== undefined || (messageCount ?? 0) >= MIN_MESSAGES_PER_USER;
+    unlockedParam !== undefined ||
+    (myMsgCount >= MIN_MESSAGES_PER_USER && partnerMsgCount >= MIN_MESSAGES_PER_USER);
 
   return (
     <MobileShell>
