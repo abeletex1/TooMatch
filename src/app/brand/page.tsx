@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
-import { buttonClasses } from "@/components/ui/Button";
+import BrandCTA from "./BrandCTA";
 import { logoutAction } from "@/app/logout/actions";
 
 /**
@@ -53,12 +52,7 @@ export default async function BrandPage() {
 
         {/* Acciones */}
         <div className="flex flex-col gap-2.5 mt-6">
-          <Link
-            href="/onboarding"
-            className={`${buttonClasses("outline", true)} !py-9 !text-[14px]`}
-          >
-            Crear mi perfil →
-          </Link>
+          <BrandCTA />
         </div>
 
         {/* Logout sutil para poder probar el flujo */}
