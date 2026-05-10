@@ -17,7 +17,7 @@ async function getUserEmail(userId: string): Promise<string | null> {
 }
 
 async function sendEmail(to: string, payload: EmailPayload): Promise<void> {
-  await fetch(API_URL, {
+  const res = await fetch(API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -30,6 +30,7 @@ async function sendEmail(to: string, payload: EmailPayload): Promise<void> {
       html: payload.html,
     }),
   });
+  if (!res.ok) throw new Error(`Resend error ${res.status} for ${to}`);
 }
 
 function emailTemplate(title: string, body: string, ctaText: string, ctaUrl: string): string {

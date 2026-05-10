@@ -24,9 +24,13 @@ export async function GET() {
     .map((u) => u.email)
     .filter((e): e is string => !!e);
 
-  const settled = await Promise.allSettled(emails.map((email) => sendWelcomeEmail(email)));
-  const ok = settled.filter((r) => r.status === "fulfilled").length;
-  const failed = settled.filter((r) => r.status === "rejected").length;
+  let ok = 0, failed = 0;
+  for (let i = 0; i < emails.length; i += 3) {
+    const batch = emails.slice(i, i + 3);
+    const settled = await Promise.allSettled(batch.map((email) => sendWelcomeEmail(email)));
+    ok += settled.filter((r) => r.status === "fulfilled").length;
+    failed += settled.filter((r) => r.status === "rejected").length;
+  }
 
   return NextResponse.json({ ok, failed, total: emails.length });
 }
