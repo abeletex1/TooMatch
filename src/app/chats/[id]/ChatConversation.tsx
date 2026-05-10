@@ -51,7 +51,6 @@ export default function ChatConversation({
   const partnerTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const myTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalMessages = messages.length;
   const myCount = messages.filter((m) => m.sender_id === currentUserId).length;
   const partnerCount = messages.filter((m) => m.sender_id !== currentUserId).length;
   const unlocked = myCount >= MIN_MESSAGES_PER_USER && partnerCount >= MIN_MESSAGES_PER_USER;
@@ -185,9 +184,9 @@ export default function ChatConversation({
             ) : (
               <div className="h-[18px] w-24 bg-ink/10 rounded-full blur-[3px] my-0.5" />
             )}
-            <span className="block text-[10px] text-ink-3 font-light">
-              {unlocked ? "Desbloqueado" : `Tú ${myCount}/${MIN_MESSAGES_PER_USER} · ${partnerPronoun} ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
-            </span>
+            {unlocked && (
+              <span className="block text-[10px] text-ink-3 font-light">Desbloqueado</span>
+            )}
           </div>
           <button onClick={() => setUnmatchOpen(true)} aria-label="Opciones"
             className="text-ink-3 hover:text-ink-2 px-2 -mr-1 transition-colors">
@@ -216,7 +215,7 @@ export default function ChatConversation({
       {/* ── Tab: CHAT ── */}
       {tab === "chat" && (
         <>
-          {/* Contador */}
+          {/* Contador — desaparece al desbloquear */}
           {!unlocked && (
             <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
               {myRemaining > 0 && `Tú: ${myCount}/${MIN_MESSAGES_PER_USER}`}
