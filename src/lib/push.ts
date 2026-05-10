@@ -4,12 +4,6 @@ import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMatchEmail, sendMessageEmail } from "@/lib/email";
 
-webpush.setVapidDetails(
-  "mailto:hola@toomatch.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 type PushPayload = {
   title: string;
   body: string;
@@ -20,6 +14,11 @@ type PushPayload = {
 };
 
 export async function sendPushToUser(userId: string, payload: PushPayload) {
+  webpush.setVapidDetails(
+    "mailto:hola@toomatch.app",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
   const admin = createAdminClient();
   const { data: subs } = await admin
     .from("push_subscriptions")
