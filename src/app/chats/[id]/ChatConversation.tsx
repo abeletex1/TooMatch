@@ -67,9 +67,10 @@ export default function ChatConversation({
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
-  // Recarga mensajes al volver a la app (notificación recibida en segundo plano)
+  // Recarga mensajes al volver a la app y cada 5s como fallback del Realtime
   useEffect(() => {
     async function refetch() {
+      if (document.visibilityState !== "visible") return;
       const supabase = createClient();
       const { data } = await supabase
         .from("messages")
@@ -85,7 +86,11 @@ export default function ChatConversation({
     }
 
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    const interval = setInterval(refetch, 5000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(interval);
+    };
   }, [match.id]);
 
   useEffect(() => {
