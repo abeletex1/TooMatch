@@ -16,7 +16,9 @@ export default async function WelcomePage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const firstName = profile?.display_name?.split(" ")[0] ?? null;
+  if (!profile?.display_name) redirect("/intro");
+
+  const firstName = profile.display_name.split(" ")[0];
 
   return <WelcomeSlides name={firstName} />;
 }
