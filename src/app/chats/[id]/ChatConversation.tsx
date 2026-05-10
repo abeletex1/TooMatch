@@ -67,6 +67,26 @@ export default function ChatConversation({
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
+  // Recarga mensajes al volver a la app (notificación recibida en segundo plano)
+  useEffect(() => {
+    async function refetch() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("match_id", match.id)
+        .order("created_at", { ascending: true })
+        .limit(100);
+      if (data) setMessages(data as MessageRow[]);
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") refetch();
+    }
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [match.id]);
 
   useEffect(() => {
     const supabase = createClient();
