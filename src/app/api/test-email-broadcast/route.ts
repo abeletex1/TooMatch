@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWelcomeEmail } from "@/lib/email";
 
+export const maxDuration = 60;
+
 export async function GET() {
   const supabase = await createClient();
   const {
