@@ -26,13 +26,17 @@ export async function GET() {
     .map((u) => u.email)
     .filter((e): e is string => !!e);
 
-  let ok = 0, failed = 0;
+  let ok = 0;
+  const errors: string[] = [];
   for (let i = 0; i < emails.length; i += 3) {
     const batch = emails.slice(i, i + 3);
     const settled = await Promise.allSettled(batch.map((email) => sendWelcomeEmail(email)));
-    ok += settled.filter((r) => r.status === "fulfilled").length;
-    failed += settled.filter((r) => r.status === "rejected").length;
+    for (let j = 0; j < settled.length; j++) {
+      const r = settled[j];
+      if (r.status === "fulfilled") ok++;
+      else errors.push(`${batch[j]}: ${r.reason?.message ?? r.reason}`);
+    }
   }
 
-  return NextResponse.json({ ok, failed, total: emails.length });
+  return NextResponse.json({ ok, failed: errors.length, total: emails.length, errors });
 }
