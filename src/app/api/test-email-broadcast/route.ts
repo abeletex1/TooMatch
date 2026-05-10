@@ -28,14 +28,14 @@ export async function GET() {
 
   let ok = 0;
   const errors: string[] = [];
-  for (let i = 0; i < emails.length; i += 3) {
-    const batch = emails.slice(i, i + 3);
-    const settled = await Promise.allSettled(batch.map((email) => sendWelcomeEmail(email)));
-    for (let j = 0; j < settled.length; j++) {
-      const r = settled[j];
-      if (r.status === "fulfilled") ok++;
-      else errors.push(`${batch[j]}: ${r.reason?.message ?? r.reason}`);
+  for (let i = 0; i < emails.length; i++) {
+    try {
+      await sendWelcomeEmail(emails[i]);
+      ok++;
+    } catch (e: unknown) {
+      errors.push(`${emails[i]}: ${e instanceof Error ? e.message : String(e)}`);
     }
+    await new Promise((r) => setTimeout(r, 700));
   }
 
   return NextResponse.json({ ok, failed: errors.length, total: emails.length, errors });
