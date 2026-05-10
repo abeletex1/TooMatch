@@ -68,7 +68,7 @@ export default async function MatchProfilePage({
   const unlocked =
     unlockedParam !== undefined ||
     (myMsgCount >= MIN_MESSAGES_PER_USER && partnerMsgCount >= MIN_MESSAGES_PER_USER);
-  const nameVisible = myMsgCount >= 1;
+  const nameVisible = myMsgCount >= 1 && partnerMsgCount >= 1;
   const name = nameVisible ? rawName : "Tu match";
 
   return (

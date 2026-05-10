@@ -55,7 +55,7 @@ export default function ChatConversation({
   const myCount = messages.filter((m) => m.sender_id === currentUserId).length;
   const partnerCount = messages.filter((m) => m.sender_id !== currentUserId).length;
   const unlocked = myCount >= MIN_MESSAGES_PER_USER && partnerCount >= MIN_MESSAGES_PER_USER;
-  const nameVisible = myCount >= 1;
+  const nameVisible = myCount >= 1 && partnerCount >= 1;
   const myRemaining = Math.max(0, MIN_MESSAGES_PER_USER - myCount);
   const partnerRemaining = Math.max(0, MIN_MESSAGES_PER_USER - partnerCount);
 
