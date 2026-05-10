@@ -47,16 +47,6 @@ const VALUES_OPTIONS = [
   "Ciencia y razón",
   "Tradición",
   "Sostenibilidad",
-
-  // Cultura e intereses
-  "Cultura",
-  "Tecnología",
-  "Música",
-  "Arte",
-  "Literatura",
-  "Cine",
-  "Emprendimiento",
-  "Política",
 ];
 
 type Data = {
@@ -464,7 +454,7 @@ function Step3({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
-  const max = 6;
+  const max = 5;
 
   function toggle(value: string) {
     const isSelected = data.values.includes(value);
