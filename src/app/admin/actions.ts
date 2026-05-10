@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { sendPushToUsers } from "@/lib/push";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
@@ -48,6 +49,14 @@ export async function createMatchAction(
   });
 
   if (error) return { error: error.message };
+
+  await sendPushToUsers([user1Id, user2Id], {
+    title: "✦ Tienes un nuevo match",
+    body: "Alguien compatible contigo está esperando. Entra para descubrirlo.",
+    url: "/match",
+    type: "match",
+  });
+
   return {};
 }
 
@@ -145,6 +154,14 @@ REGLAS ESTRICTAS:
   );
   if (error) return { matched: 0, pairs: [], error: error.message };
 
+  const allUserIds = validPairs.flat();
+  await sendPushToUsers(allUserIds, {
+    title: "✦ Tienes un nuevo match",
+    body: "Alguien compatible contigo está esperando. Entra para descubrirlo.",
+    url: "/match",
+    type: "match",
+  });
+
   return { matched: validPairs.length, pairs: validPairs };
 }
 
@@ -221,6 +238,14 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
 
   const { error } = await admin.from("matches").insert(newMatches);
   if (error) return { matched: 0, skipped, error: error.message };
+
+  const allUserIds = newMatches.flatMap((m) => [m.user1_id, m.user2_id]);
+  await sendPushToUsers(allUserIds, {
+    title: "✦ Tienes un nuevo match",
+    body: "Alguien compatible contigo está esperando. Entra para descubrirlo.",
+    url: "/match",
+    type: "match",
+  });
 
   return { matched: newMatches.length, skipped };
 }
