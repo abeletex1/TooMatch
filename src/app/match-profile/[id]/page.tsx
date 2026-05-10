@@ -62,12 +62,14 @@ export default async function MatchProfilePage({
   if (!partnerProfile) notFound();
 
   const p = partnerProfile as ProfileRow;
-  const name = p.display_name?.trim() || "Perfil";
+  const rawName = p.display_name?.trim() || "Perfil";
   const myMsgCount = (allMessages ?? []).filter((m) => m.sender_id === user.id).length;
   const partnerMsgCount = (allMessages ?? []).filter((m) => m.sender_id === partnerId).length;
   const unlocked =
     unlockedParam !== undefined ||
     (myMsgCount >= MIN_MESSAGES_PER_USER && partnerMsgCount >= MIN_MESSAGES_PER_USER);
+  const nameVisible = myMsgCount >= 1;
+  const name = nameVisible ? rawName : "Tu match";
 
   return (
     <MobileShell>

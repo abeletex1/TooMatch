@@ -57,4 +57,4 @@ export function getMatchById(id: string): MockMatch | null {
 }
 
 export const UNLOCK_AFTER_MESSAGES = 7; // legacy, no usar
-export const MIN_MESSAGES_PER_USER = 3;
+export const MIN_MESSAGES_PER_USER = 4;

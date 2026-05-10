@@ -55,6 +55,7 @@ export default function ChatConversation({
   const myCount = messages.filter((m) => m.sender_id === currentUserId).length;
   const partnerCount = messages.filter((m) => m.sender_id !== currentUserId).length;
   const unlocked = myCount >= MIN_MESSAGES_PER_USER && partnerCount >= MIN_MESSAGES_PER_USER;
+  const nameVisible = myCount >= 1;
   const myRemaining = Math.max(0, MIN_MESSAGES_PER_USER - myCount);
   const partnerRemaining = Math.max(0, MIN_MESSAGES_PER_USER - partnerCount);
 
@@ -179,7 +180,11 @@ export default function ChatConversation({
           <MatchAvatar matchId={match.id} initial={match.initial} photoUrl={match.photos[0]}
             size="sm" unlocked={unlocked} />
           <div className="flex-1 min-w-0">
-            <span className="block font-serif text-[16px] text-ink leading-tight">{match.name}</span>
+            {nameVisible ? (
+              <span className="block font-serif text-[16px] text-ink leading-tight">{match.name}</span>
+            ) : (
+              <div className="h-[18px] w-24 bg-ink/10 rounded-full blur-[3px] my-0.5" />
+            )}
             <span className="block text-[10px] text-ink-3 font-light">
               {unlocked ? "Desbloqueado" : `Tú ${myCount}/${MIN_MESSAGES_PER_USER} · ${partnerPronoun} ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
             </span>
@@ -320,7 +325,11 @@ export default function ChatConversation({
               </div>
             )}
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-5 pb-5 pt-12">
-              <p className="font-serif text-[24px] text-white font-medium">{match.name}</p>
+              {nameVisible ? (
+                <p className="font-serif text-[24px] text-white font-medium">{match.name}</p>
+              ) : (
+                <div className="h-7 w-32 bg-white/20 rounded-full blur-[4px] mb-1" />
+              )}
               {match.short && <p className="text-[13px] text-white/70 font-light">{match.short}</p>}
             </div>
           </div>
@@ -351,7 +360,7 @@ export default function ChatConversation({
             {/* Sobre él/ella */}
             {match.self_description && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4 overflow-hidden">
-                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Sobre {match.name.split(" ")[0]}</p>
+                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">{nameVisible ? `Sobre ${match.name.split(" ")[0]}` : "Sobre este perfil"}</p>
                 <ReadMoreText text={match.self_description} />
               </div>
             )}
@@ -388,7 +397,7 @@ export default function ChatConversation({
         </div>
       )}
 
-      <UnmatchSheet matchName={match.name} open={unmatchOpen}
+      <UnmatchSheet matchName={nameVisible ? match.name : "Tu match"} open={unmatchOpen}
         onClose={() => setUnmatchOpen(false)} onConfirm={confirmUnmatch} />
     </div>
   );

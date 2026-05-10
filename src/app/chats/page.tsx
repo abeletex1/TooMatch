@@ -31,8 +31,8 @@ export default async function ChatsPage() {
   for (const m of matches ?? []) {
     const partnerId = m.user1_id === user.id ? m.user2_id : m.user1_id;
 
-    // Perfil del partner + último mensaje en paralelo
-    const [{ data: partnerProfile }, { data: lastMsgs }] = await Promise.all([
+    // Perfil del partner + último mensaje + mis mensajes en paralelo
+    const [{ data: partnerProfile }, { data: lastMsgs }, { count: myMsgCount }] = await Promise.all([
       supabase
         .from("profiles")
         .select("display_name, photos")
@@ -44,9 +44,16 @@ export default async function ChatsPage() {
         .eq("match_id", m.id)
         .order("created_at", { ascending: false })
         .limit(1),
+      supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", m.id)
+        .eq("sender_id", user.id),
     ]);
 
-    const name = partnerProfile?.display_name?.trim() || "Perfil";
+    const nameVisible = (myMsgCount ?? 0) >= 1;
+    const rawName = partnerProfile?.display_name?.trim() || "Perfil";
+    const name = nameVisible ? rawName : "Tu match";
     const lastMsg = lastMsgs?.[0];
     const preview = lastMsg
       ? lastMsg.sender_id === user.id
@@ -68,7 +75,7 @@ export default async function ChatsPage() {
 
     chats.push({
       id: m.id,
-      initial: name.charAt(0).toUpperCase(),
+      initial: nameVisible ? rawName.charAt(0).toUpperCase() : "?",
       photoUrl: partnerProfile?.photos?.[0],
       name,
       preview,
