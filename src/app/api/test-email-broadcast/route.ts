@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWelcomeEmail } from "@/lib/email";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function GET() {
   const supabase = await createClient();
@@ -35,7 +35,7 @@ export async function GET() {
     } catch (e: unknown) {
       errors.push(`${emails[i]}: ${e instanceof Error ? e.message : String(e)}`);
     }
-    await new Promise((r) => setTimeout(r, 700));
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   return NextResponse.json({ ok, failed: errors.length, total: emails.length, errors });
