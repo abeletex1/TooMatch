@@ -58,7 +58,6 @@ export default async function ChatsPage() {
 
     const nameVisible = (myMsgCount ?? 0) >= 1 && (partnerMsgCount ?? 0) >= 1;
     const rawName = partnerProfile?.display_name?.trim() || "Perfil";
-    const name = nameVisible ? rawName : "Tu match";
     const lastMsg = lastMsgs?.[0];
     const preview = lastMsg
       ? lastMsg.sender_id === user.id
@@ -82,7 +81,8 @@ export default async function ChatsPage() {
       id: m.id,
       initial: nameVisible ? rawName.charAt(0).toUpperCase() : "?",
       photoUrl: partnerProfile?.photos?.[0],
-      name,
+      name: rawName,
+      nameVisible,
       preview,
       time,
       hasUnread,

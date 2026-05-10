@@ -8,6 +8,7 @@ export type ChatRow = {
   initial: string;
   photoUrl?: string;
   name: string;
+  nameVisible: boolean;
   preview: string;
   time: string;
   hasUnread: boolean;
@@ -27,8 +28,18 @@ export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
     );
   }
 
+  const hasHidden = chats.some((c) => !c.nameVisible);
+
   return (
     <>
+      {hasHidden && (
+        <div className="mx-4 mt-3 mb-1 px-3.5 py-2.5 bg-rose-light border-[0.5px] border-rose-mid rounded-xl">
+          <p className="text-[11px] text-rose-dark font-light leading-[1.6]">
+            Escribe <strong className="font-medium">1 mensaje</strong> cada uno para ver el nombre · <strong className="font-medium">4 mensajes</strong> para ver las fotos y el perfil completo.
+          </p>
+        </div>
+      )}
+
       {chats.map((c) => (
         <Link
           key={c.id}
@@ -42,7 +53,10 @@ export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
             size="sm"
           />
           <div className="flex-1 min-w-0">
-            <p className={`text-[14px] truncate ${c.hasUnread ? "text-ink font-semibold" : "text-ink font-medium"}`}>
+            <p
+              className={`text-[14px] truncate ${c.hasUnread ? "font-semibold" : "font-medium"} text-ink`}
+              style={!c.nameVisible ? { filter: "blur(5px)", userSelect: "none" } : undefined}
+            >
               {c.name}
             </p>
             <p className={`text-[12px] font-light truncate ${c.hasUnread ? "text-ink-2" : "text-ink-3"}`}>
