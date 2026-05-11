@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import MatchAvatar from "@/components/ui/MatchAvatar";
 
 export type ChatRow = {
@@ -15,14 +16,16 @@ export type ChatRow = {
 };
 
 export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
+  const t = useTranslations("chats");
+
   if (chats.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-7 text-center py-16">
         <p className="font-serif italic text-[16px] text-ink-3">
-          Aún no hay conversaciones.
+          {t("emptyTitle")}
         </p>
         <p className="text-[12px] text-ink-3 font-light mt-2 max-w-[260px]">
-          Cuando empieces a hablar con tu match aparecerá aquí.
+          {t("emptySubtitle")}
         </p>
       </div>
     );
@@ -35,7 +38,10 @@ export default function ChatsListClient({ chats }: { chats: ChatRow[] }) {
       {hasHidden && (
         <div className="mx-4 mt-3 mb-1 px-3.5 py-2.5 bg-rose-light border-[0.5px] border-rose-mid rounded-xl">
           <p className="text-[11px] text-rose-dark font-light leading-[1.6]">
-            Escribe <strong className="font-medium">1 mensaje</strong> cada uno para ver el nombre · <strong className="font-medium">4 mensajes</strong> para ver las fotos y el perfil completo.
+            {t.rich("unlockBanner", {
+              one: (chunks) => <strong className="font-medium">{chunks}</strong>,
+              four: (chunks) => <strong className="font-medium">{chunks}</strong>,
+            })}
           </p>
         </div>
       )}

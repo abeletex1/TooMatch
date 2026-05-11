@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import ExpandableText from "@/components/ui/ExpandableText";
 import Logo from "@/components/ui/Logo";
 import {
@@ -47,6 +48,7 @@ function EditSheet({
   open: boolean; title: string; onClose: () => void;
   onSave: () => void; saving: boolean; children: React.ReactNode;
 }) {
+  const tCommon = useTranslations("common");
   const shellEl = typeof document !== "undefined" ? document.querySelector(".shell") : null;
   if (!open || !shellEl) return null;
   return createPortal(
@@ -63,11 +65,11 @@ function EditSheet({
         <div className="flex gap-2.5 mt-6">
           <button onClick={onClose}
             className="flex-1 px-4 py-2.5 rounded-xl border-[0.5px] border-border-strong text-[13px] text-ink-2 font-light">
-            Cancelar
+            {tCommon("cancel")}
           </button>
           <button onClick={onSave} disabled={saving}
             className="flex-1 px-4 py-2.5 rounded-xl bg-ink text-bg text-[13px] disabled:opacity-50">
-            {saving ? "Guardando…" : "Guardar"}
+            {saving ? tCommon("saving") : tCommon("save")}
           </button>
         </div>
       </div>
@@ -83,6 +85,7 @@ function PhotoPickSheet({
 }: {
   open: boolean; photos: string[]; onPick: (i: number) => void; onClose: () => void;
 }) {
+  const tProfile = useTranslations("profile");
   const shellEl = typeof document !== "undefined" ? document.querySelector(".shell") : null;
   if (!open || !shellEl) return null;
   return createPortal(
@@ -92,15 +95,15 @@ function PhotoPickSheet({
         onClick={(e) => e.stopPropagation()}>
         <div className="w-9 h-[3px] bg-bg-3 rounded-full mx-auto mb-5" />
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-serif text-[18px] text-ink font-medium">Foto de perfil</h3>
+          <h3 className="font-serif text-[18px] text-ink font-medium">{tProfile("photoTitle")}</h3>
           <button onClick={onClose} className="text-ink-3 hover:text-ink text-[22px] leading-none">×</button>
         </div>
         <p className="text-[12px] text-ink-3 font-light mb-4">
-          Toca una foto para usarla como foto principal.
+          {tProfile("photoHint")}
         </p>
         {photos.length === 0 ? (
           <p className="text-[13px] text-ink-3 font-light text-center py-4">
-            Aún no tienes fotos subidas.
+            {tProfile("noPhotos")}
           </p>
         ) : (
           <div className="grid grid-cols-3 gap-2">
@@ -167,6 +170,7 @@ function PrefBtn({ selected, onClick, children }: { selected: boolean; onClick: 
 /* ─── Componente principal ──────────────────────────────────────────────── */
 
 export default function ProfileEditor({ initial, userEmail }: { initial: Profile; userEmail: string }) {
+  const tCommon = useTranslations("common");
   const [profile, setProfile] = useState(initial);
   const [activeSheet, setActiveSheet] = useState<Sheet>(null);
   const [saving, startSaving] = useTransition();
@@ -452,7 +456,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
         <div className="flex items-center justify-center gap-5 pt-2 pb-3">
           <form action={logoutAction}>
             <button type="submit" className="text-[12px] text-ink-3 font-light hover:text-rose-dark hover:underline underline-offset-2">
-              Cerrar sesión
+              {tCommon("logout")}
             </button>
           </form>
           <span className="text-ink-3 text-[10px]">·</span>

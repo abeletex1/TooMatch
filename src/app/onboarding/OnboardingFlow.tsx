@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import { buttonClasses } from "@/components/ui/Button";
@@ -13,41 +14,15 @@ import { organizeTextAction, transcribeAndOrganizeAction } from "./ai-actions";
 
 const TOTAL_STEPS = 6;
 
-const VALUES_OPTIONS = [
-  // Carácter
-  "Honestidad",
-  "Humor",
-  "Curiosidad",
-  "Empatía",
-  "Lealtad",
-  "Ambición",
-  "Calma",
-  "Creatividad",
-  "Independencia",
-  "Generosidad",
-
-  // Estilo de vida
-  "Aventura",
-  "Naturaleza",
-  "Deporte",
-  "Viajes",
-  "Vida nocturna",
-  "Tranquilidad",
-  "Familia",
-  "Animales",
-  "Gastronomía",
-
-  // Visión del mundo
-  "Progresista",
-  "Conservador",
-  "Libertad individual",
-  "Justicia social",
-  "Feminismo",
-  "Espiritualidad",
-  "Ciencia y razón",
-  "Tradición",
-  "Sostenibilidad",
-];
+const VALUES_KEYS = [
+  "valuesHonesty", "valuesHumor", "valuesCuriosity", "valuesEmpathy", "valuesLoyalty",
+  "valuesAmbition", "valuesCalm", "valuesCreativity", "valuesIndependence", "valuesGenerosity",
+  "valuesAdventure", "valuesNature", "valuesSport", "valuesTravel", "valuesNightlife",
+  "valuesQuiet", "valuesFamily", "valuesPets", "valuesFood",
+  "valuesProgressive", "valuesConservative", "valuesIndividualFreedom", "valuesSocialJustice",
+  "valuesFeminism", "valuesSpirituality", "valuesScience", "valuesTradition", "valuesSustainability",
+] as const;
+type ValuesKey = typeof VALUES_KEYS[number];
 
 type Data = {
   self_description: string;
@@ -150,10 +125,11 @@ function StepHeader({
   titleEm?: string;
   subtitle: string;
 }) {
+  const t = useTranslations("onboarding");
   return (
     <div className="mb-4">
       <p className="text-[10px] uppercase tracking-[0.12em] text-ink-3 mb-2">
-        Paso {step} de {TOTAL_STEPS}
+        {t("stepOf", { step, total: TOTAL_STEPS })}
       </p>
       <h2 className="font-serif text-[26px] text-ink font-medium leading-[1.2] mb-2">
         {title}{" "}
@@ -225,6 +201,7 @@ function AiTextHelper({
   onUpdate: (t: string) => void;
   field: "self" | "partner";
 }) {
+  const tAi = useTranslations("onboarding");
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -264,7 +241,7 @@ function AiTextHelper({
       recorder.start();
       setRecording(true);
     } catch {
-      setAiError("No se pudo acceder al micrófono.");
+      setAiError(tAi("aiMicError"));
     }
   }
 
@@ -286,7 +263,7 @@ function AiTextHelper({
               : "bg-bg border-border-strong text-ink-2 hover:bg-bg-2"
           }`}
         >
-          {recording ? "⏹ Parar grabación" : "🎙 Grabar"}
+          {recording ? tAi("aiStop") : tAi("aiRecord")}
         </button>
 
         {text.trim().length >= 10 && !recording && (
@@ -296,13 +273,13 @@ function AiTextHelper({
             disabled={loading}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border-[0.5px] bg-bg border-border-strong text-ink-2 hover:bg-bg-2 disabled:opacity-40 transition-colors"
           >
-            {loading ? "Procesando…" : "✦ Mejorar con IA"}
+            {loading ? tAi("aiProcessing") : tAi("aiImprove")}
           </button>
         )}
 
         {loading && (
           <span className="text-[11px] text-ink-3 font-light self-center">
-            {recording ? "" : "La IA está redactando…"}
+            {recording ? "" : tAi("aiWriting")}
           </span>
         )}
       </div>
@@ -323,15 +300,12 @@ function Step1({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
   const minChars = 30;
   const text = data.self_description;
 
-  const guides = [
-    "Cómo te describirían otras personas",
-    "Cómo eres en tu día a día cuando estás a gusto",
-    "Qué te hace sentir bien de verdad",
-  ];
+  const guides = [t("step1Prompt1"), t("step1Prompt2"), t("step1Prompt3")];
 
   function appendGuide(idx: number, label: string) {
     const newText = text + (text ? "\n\n" : "") + `${label}: `;
@@ -343,13 +317,11 @@ function Step1({
     <>
       <StepHeader
         step={1}
-        title="¿Quién"
-        titleEm="eres?"
-        subtitle="Cuéntalo en tus palabras, sin filtros. Es lo único que verá tu match al principio."
+        title={t("step1Title1")}
+        titleEm={t("step1Title2")}
+        subtitle={t("step1Subtitle")}
       />
-      <AiHint>
-        No pienses en quedar bien. Cuanto más tú, mejor encaja.
-      </AiHint>
+      <AiHint>{t("step1Hint")}</AiHint>
       <div className="flex flex-col gap-1.5 mb-3">
         {guides.map((g, i) => (
           <GuideChip
@@ -364,7 +336,7 @@ function Step1({
       <textarea
         value={text}
         onChange={(e) => update({ self_description: e.target.value })}
-        placeholder="Por ejemplo: soy diseñador, vivo lento, me gusta la fotografía analógica…"
+        placeholder={t("step1Placeholder")}
         className="w-full h-[140px] resize-none border-[0.5px] border-border-strong rounded-xl px-3.5 py-3 text-[13px] font-light leading-[1.7] bg-bg text-ink outline-none focus:border-rose"
       />
       <p
@@ -372,9 +344,9 @@ function Step1({
           text.length >= minChars ? "text-rose" : "text-ink-3"
         }`}
       >
-        {text.length} / mín. {minChars}
+        {text.length} / {t("step1Min")} {minChars}
       </p>
-      <AiTextHelper text={text} onUpdate={(t) => update({ self_description: t })} field="self" />
+      <AiTextHelper text={text} onUpdate={(v) => update({ self_description: v })} field="self" />
     </>
   );
 }
@@ -388,16 +360,12 @@ function Step2({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
   const minChars = 30;
   const text = data.partner_description;
 
-  const guides = [
-    "Cómo te gustaría que fuera esa persona en su día a día",
-    "Qué tipo de vida te gustaría compartir",
-    "Cómo te gustaría sentirte con esa persona",
-    "Algo que sabes que no encajaría contigo",
-  ];
+  const guides = [t("step2Prompt1"), t("step2Prompt2"), t("step2Prompt3"), t("step2Prompt4")];
 
   function appendGuide(idx: number, label: string) {
     const newText = text + (text ? "\n\n" : "") + `${label}: `;
@@ -409,13 +377,11 @@ function Step2({
     <>
       <StepHeader
         step={2}
-        title="¿Qué"
-        titleEm="buscas?"
-        subtitle="Personalidad, no perfil de LinkedIn. Cuéntanos cómo es esa persona."
+        title={t("step2Title1")}
+        titleEm={t("step2Title2")}
+        subtitle={t("step2Subtitle")}
       />
-      <AiHint>
-        Lo importante no es qué hace, sino cómo es.
-      </AiHint>
+      <AiHint>{t("step2Hint")}</AiHint>
       <div className="flex flex-col gap-1.5 mb-3">
         {guides.map((g, i) => (
           <GuideChip
@@ -430,7 +396,7 @@ function Step2({
       <textarea
         value={text}
         onChange={(e) => update({ partner_description: e.target.value })}
-        placeholder="Por ejemplo: alguien curioso, con sentido del humor, que me cuente cosas que no sé…"
+        placeholder={t("step2Placeholder")}
         className="w-full h-[140px] resize-none border-[0.5px] border-border-strong rounded-xl px-3.5 py-3 text-[13px] font-light leading-[1.7] bg-bg text-ink outline-none focus:border-rose"
       />
       <p
@@ -438,9 +404,9 @@ function Step2({
           text.length >= minChars ? "text-rose" : "text-ink-3"
         }`}
       >
-        {text.length} / mín. {minChars}
+        {text.length} / {t("step1Min")} {minChars}
       </p>
-      <AiTextHelper text={text} onUpdate={(t) => update({ partner_description: t })} field="partner" />
+      <AiTextHelper text={text} onUpdate={(v) => update({ partner_description: v })} field="partner" />
     </>
   );
 }
@@ -454,14 +420,17 @@ function Step3({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
   const max = 5;
 
-  function toggle(value: string) {
-    const isSelected = data.values.includes(value);
+  const valueItems = VALUES_KEYS.map((key) => ({ key, label: t(key) }));
+
+  function toggle(key: ValuesKey) {
+    const isSelected = data.values.includes(key);
     if (isSelected) {
-      update({ values: data.values.filter((v) => v !== value) });
+      update({ values: data.values.filter((v) => v !== key) });
     } else if (data.values.length < max) {
-      update({ values: [...data.values, value] });
+      update({ values: [...data.values, key] });
     }
   }
 
@@ -469,33 +438,33 @@ function Step3({
     <>
       <StepHeader
         step={3}
-        title="Tus"
-        titleEm="valores"
-        subtitle={`Elige hasta ${max}. Esto pesa mucho en la compatibilidad.`}
+        title={t("step3Title1")}
+        titleEm={t("step3Title2")}
+        subtitle={t("step3Subtitle", { max })}
       />
       <div className="flex flex-wrap gap-1.5">
-        {VALUES_OPTIONS.map((v) => {
-          const sel = data.values.includes(v);
+        {valueItems.map(({ key, label }) => {
+          const sel = data.values.includes(key);
           const disabled = !sel && data.values.length >= max;
           return (
             <button
-              key={v}
+              key={key}
               type="button"
               disabled={disabled}
-              onClick={() => toggle(v)}
+              onClick={() => toggle(key)}
               className={`px-3.5 py-1.5 rounded-full text-[12px] font-light border-[0.5px] transition-colors ${
                 sel
                   ? "bg-rose-light border-rose text-rose-dark"
                   : "bg-bg border-border-strong text-ink-2 hover:bg-bg-2"
               } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
             >
-              {v}
+              {label}
             </button>
           );
         })}
       </div>
       <p className="text-[11px] text-ink-3 font-light text-right mt-3">
-        {data.values.length} / {max} seleccionados
+        {data.values.length} / {max} {t("step3Selected")}
       </p>
     </>
   );
@@ -510,6 +479,8 @@ function Step4({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
+
   function updateRange(part: "min" | "max", value: number) {
     if (part === "min" && value < data.age_max - 1) {
       update({ age_min: value });
@@ -522,14 +493,14 @@ function Step4({
     <>
       <StepHeader
         step={4}
-        title="Rango de"
-        titleEm="edad"
-        subtitle="¿Entre qué edades buscas a tu match?"
+        title={t("step4Title1")}
+        titleEm={t("step4Title2")}
+        subtitle={t("step4Subtitle")}
       />
 
-      <p className="text-[12px] text-ink-2 mb-3">Busco entre</p>
+      <p className="text-[12px] text-ink-2 mb-3">{t("step4LookingBetween")}</p>
       <div className="flex items-center gap-2.5 mb-2">
-        <span className="text-[13px] text-ink-2 w-[40px] font-light">Min</span>
+        <span className="text-[13px] text-ink-2 w-[40px] font-light">{t("step4Min")}</span>
         <input
           type="range"
           min={18}
@@ -544,7 +515,7 @@ function Step4({
         </span>
       </div>
       <div className="flex items-center gap-2.5">
-        <span className="text-[13px] text-ink-2 w-[40px] font-light">Max</span>
+        <span className="text-[13px] text-ink-2 w-[40px] font-light">{t("step4Max")}</span>
         <input
           type="range"
           min={18}
@@ -571,6 +542,7 @@ function Step5({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
   const [provinceSearch, setProvinceSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
 
@@ -593,13 +565,12 @@ function Step5({
     <>
       <StepHeader
         step={5}
-        title="¿Dónde"
-        titleEm="estás?"
-        subtitle="Tu provincia y ciudad. Así encontramos matches cerca de ti."
+        title={t("step5Title1")}
+        titleEm={t("step5Title2")}
+        subtitle={t("step5Subtitle")}
       />
 
-      {/* Provincia */}
-      <p className="text-[12px] text-ink-2 mb-2">Provincia</p>
+      <p className="text-[12px] text-ink-2 mb-2">{t("step5Province")}</p>
       {data.province ? (
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[12px] bg-rose-light border-[0.5px] border-rose-mid text-rose-dark px-3 py-1 rounded-full font-light">
@@ -610,14 +581,14 @@ function Step5({
             onClick={() => update({ province: "", city: "" })}
             className="text-[11px] text-ink-3 hover:text-rose-dark"
           >
-            Cambiar
+            {t("step5Change")}
           </button>
         </div>
       ) : (
         <>
           <input
             type="text"
-            placeholder="Buscar provincia…"
+            placeholder={t("step5SearchProvince")}
             value={provinceSearch}
             onChange={(e) => setProvinceSearch(e.target.value)}
             className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-1.5"
@@ -634,16 +605,15 @@ function Step5({
               </button>
             ))}
             {filteredProvinces.length === 0 && (
-              <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">Sin resultados.</p>
+              <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">{t("step5NoResults")}</p>
             )}
           </div>
         </>
       )}
 
-      {/* Ciudad — solo aparece tras elegir provincia */}
       {data.province && (
         <>
-          <p className="text-[12px] text-ink-2 mb-2">Ciudad</p>
+          <p className="text-[12px] text-ink-2 mb-2">{t("step5City")}</p>
           {data.city ? (
             <div className="flex items-center gap-2">
               <span className="text-[12px] bg-rose-light border-[0.5px] border-rose-mid text-rose-dark px-3 py-1 rounded-full font-light">
@@ -654,14 +624,14 @@ function Step5({
                 onClick={() => update({ city: "" })}
                 className="text-[11px] text-ink-3 hover:text-rose-dark"
               >
-                Cambiar
+                {t("step5Change")}
               </button>
             </div>
           ) : (
             <>
               <input
                 type="text"
-                placeholder="Buscar ciudad…"
+                placeholder={t("step5SearchCity")}
                 value={citySearch}
                 onChange={(e) => setCitySearch(e.target.value)}
                 className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-1.5"
@@ -678,7 +648,7 @@ function Step5({
                   </button>
                 ))}
                 {filteredCities.length === 0 && (
-                  <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">Sin resultados.</p>
+                  <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">{t("step5NoResults")}</p>
                 )}
               </div>
             </>
@@ -700,6 +670,7 @@ function Step6({
   data: Data;
   update: (patch: Partial<Data>) => void;
 }) {
+  const t = useTranslations("onboarding");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -733,11 +704,11 @@ function Step6({
 
     for (const file of toUpload) {
       if (!file.type.startsWith("image/")) {
-        setUploadError("Solo se aceptan imágenes.");
+        setUploadError(t("step6OnlyImages"));
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        setUploadError(`"${file.name}" pesa más de 10 MB.`);
+        setUploadError(t("step6FileTooLarge", { filename: file.name }));
         return;
       }
     }
@@ -746,7 +717,7 @@ function Step6({
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Sin sesión.");
+      if (!user) throw new Error(t("step6NoSession"));
 
       const uploaded: string[] = [];
       for (const file of toUpload) {
@@ -766,7 +737,7 @@ function Step6({
 
       update({ photos: [...data.photos, ...uploaded] });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error al subir";
+      const msg = err instanceof Error ? err.message : t("step6UploadError");
       setUploadError(msg);
     } finally {
       setUploading(false);
@@ -782,16 +753,12 @@ function Step6({
     <>
       <StepHeader
         step={6}
-        title="Tus"
-        titleEm="fotos"
-        subtitle="Hasta 6 fotos. La primera será tu foto principal."
+        title={t("step6Title1")}
+        titleEm={t("step6Title2")}
+        subtitle={t("step6Subtitle")}
       />
-      <AiHint>
-        Tus fotos quedan <strong>bloqueadas</strong> para tu match hasta que
-        intercambiéis 5 mensajes. Nadie las ve antes.
-      </AiHint>
+      <AiHint>{t("step6BlurNote", { count: 5 })}</AiHint>
 
-      {/* Input oculto — acepta múltiples archivos */}
       <input
         ref={fileInputRef}
         type="file"
@@ -803,7 +770,7 @@ function Step6({
 
       {selectedIdx !== null && (
         <p className="text-[11px] text-rose font-light mb-2 text-center animate-fade-up">
-          Toca otra foto para intercambiarla
+          {t("step6SwapHint")}
         </p>
       )}
       <div className="grid grid-cols-3 gap-2 mb-3">
@@ -816,18 +783,18 @@ function Step6({
             }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+            <img src={url} alt={t("step6PhotoLabel", { n: i + 1 })} className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); removePhoto(i); setSelectedIdx(null); }}
               className="absolute top-1.5 right-1.5 w-[20px] h-[20px] rounded-full bg-ink/90 text-bg text-[12px] flex items-center justify-center hover:bg-ink"
-              aria-label="Quitar foto"
+              aria-label={t("step6Remove")}
             >
               ×
             </button>
             {i === 0 && (
               <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider bg-rose text-white">
-                Principal
+                {t("step6MainLabel")}
               </span>
             )}
           </div>
@@ -841,14 +808,14 @@ function Step6({
             className="aspect-square rounded-xl border-[0.5px] border-dashed border-border-strong bg-bg-2 flex flex-col items-center justify-center gap-1 hover:bg-bg-3 transition-colors disabled:opacity-50"
           >
             {uploading ? (
-              <span className="text-[11px] text-rose">Subiendo…</span>
+              <span className="text-[11px] text-rose">{t("step6Uploading")}</span>
             ) : (
               <>
                 <div className="w-6 h-6 rounded-full bg-bg border-[0.5px] border-border-strong flex items-center justify-center text-ink-3 text-[16px]">
                   +
                 </div>
                 <span className="text-[9px] text-ink-3">
-                  {data.photos.length === 0 ? "Añadir fotos" : "Añadir más"}
+                  {data.photos.length === 0 ? t("step6AddPhotos") : t("step6AddMore")}
                 </span>
               </>
             )}
@@ -862,7 +829,7 @@ function Step6({
         </p>
       ) : (
         <p className="text-[11px] text-ink-3 text-center font-light">
-          Puedes seleccionar varias fotos a la vez. Puedes terminar sin fotos y añadirlas después.
+          {t("step6AddNote")}
         </p>
       )}
     </>
@@ -880,6 +847,8 @@ export default function OnboardingFlow({
   initialSeeking: "male" | "female" | "both" | null;
   initialAge: number;
 }) {
+  const tCommon = useTranslations("common");
+  const tOnboarding = useTranslations("onboarding");
   const [step, setStep] = useState(1);
   const [data, setData] = useState<Data>({
     self_description: "",
@@ -931,7 +900,7 @@ export default function OnboardingFlow({
       data.gender === null ||
       data.seeking === null
     ) {
-      setError("Faltan datos obligatorios.");
+      setError(tOnboarding("step6MissingData"));
       return;
     }
     const payload: OnboardingPayload = {
@@ -952,7 +921,7 @@ export default function OnboardingFlow({
 
   return (
     <MobileShell>
-      <Topbar back={step === 1 ? "/brand" : undefined} right="Día 0" />
+      <Topbar back={step === 1 ? "/brand" : undefined} right={tCommon("day0")} />
       <ProgressBar current={step} total={TOTAL_STEPS} />
 
       <div
@@ -981,7 +950,7 @@ export default function OnboardingFlow({
             disabled={pending}
             className={`${buttonClasses("outline")} flex-1`}
           >
-            ← Atrás
+            {tCommon("back")}
           </button>
         ) : null}
         <button
@@ -992,20 +961,19 @@ export default function OnboardingFlow({
           )} flex-1`}
         >
           {pending
-            ? "Guardando…"
+            ? tCommon("saving")
             : step === TOTAL_STEPS
-            ? "Terminar →"
-            : "Siguiente →"}
+            ? tCommon("finish")
+            : tCommon("next")}
         </button>
       </div>
 
-      {/* Logout sutil */}
       <form action={logoutAction} className="text-center pb-3">
         <button
           type="submit"
           className="text-[11px] text-ink-3 font-light hover:text-rose-dark hover:underline underline-offset-2"
         >
-          Cerrar sesión
+          {tCommon("logout")}
         </button>
       </form>
     </MobileShell>

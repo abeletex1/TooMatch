@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { buttonClasses } from "@/components/ui/Button";
 
 const DELAY = 4;
 
 export default function BrandCTA() {
   const [remaining, setRemaining] = useState(DELAY);
+  const t = useTranslations("brand");
 
   useEffect(() => {
     if (remaining <= 0) return;
-    const t = setTimeout(() => setRemaining((r) => r - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(timer);
   }, [remaining]);
 
   const ready = remaining <= 0;
@@ -23,7 +25,7 @@ export default function BrandCTA() {
         disabled
         className={`${buttonClasses("outline", true)} !py-9 !text-[14px] opacity-40 cursor-not-allowed`}
       >
-        Crear mi perfil — {remaining}s
+        {t("ctaCountdown", { remaining })}
       </button>
     );
   }
@@ -33,7 +35,7 @@ export default function BrandCTA() {
       href="/onboarding"
       className={`${buttonClasses("outline", true)} !py-9 !text-[14px]`}
     >
-      Crear mi perfil →
+      {t("ctaReady")}
     </Link>
   );
 }

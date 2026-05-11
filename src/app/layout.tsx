@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -28,23 +30,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="es"
+      lang={locale}
       className={`${cormorant.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
-      {/* suppressHydrationWarning: necesario porque algunos navegadores
-          (Safari iOS, content blockers, gestores de contraseñas) inyectan
-          atributos en <body> antes de que React hidrate y eso disparaba
-          un error de hydration mismatch. */}
       <body className="bg-bg-3 antialiased" suppressHydrationWarning>
-        {children}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

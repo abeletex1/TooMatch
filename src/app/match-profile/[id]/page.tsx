@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import ExpandableText from "@/components/ui/ExpandableText";
 import { redirect, notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
 import MatchAvatar from "@/components/ui/MatchAvatar";
@@ -35,7 +36,8 @@ export default async function MatchProfilePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verificar que el usuario es participante del match
+  const t = await getTranslations("matchProfile");
+
   const { data: matchRow } = await supabase
     .from("matches")
     .select("*")
@@ -50,13 +52,9 @@ export default async function MatchProfilePage({
       ? (matchRow as MatchRow).user2_id
       : (matchRow as MatchRow).user1_id;
 
-  // Perfil del partner + mensajes en paralelo
   const [{ data: partnerProfile }, { data: allMessages }] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", partnerId).maybeSingle(),
-    supabase
-      .from("messages")
-      .select("sender_id")
-      .eq("match_id", matchId),
+    supabase.from("messages").select("sender_id").eq("match_id", matchId),
   ]);
 
   if (!partnerProfile) notFound();
@@ -69,15 +67,14 @@ export default async function MatchProfilePage({
     unlockedParam !== undefined ||
     (myMsgCount >= MIN_MESSAGES_PER_USER && partnerMsgCount >= MIN_MESSAGES_PER_USER);
   const nameVisible = myMsgCount >= 1 && partnerMsgCount >= 1;
-  const name = nameVisible ? rawName : "Tu match";
+  const name = nameVisible ? rawName : t("yourMatch");
 
   return (
     <MobileShell>
-      {/* Cabecera con gradient */}
       <header className="relative bg-gradient-to-br from-rose-light to-bg-2 px-5 pt-12 pb-5 text-center shrink-0">
         <Link
           href={`/chats/${matchId}`}
-          aria-label="Volver al chat"
+          aria-label={t("backToChat")}
           className="absolute top-4 left-4 text-rose text-[22px] leading-none hover:opacity-70"
         >
           ←
@@ -102,15 +99,14 @@ export default async function MatchProfilePage({
         ) : null}
       </header>
 
-      {/* Cuerpo con tarjetas */}
       <main className="flex-1 overflow-y-auto bg-bg-2 px-3 py-3 flex flex-col gap-2.5">
         {p.self_description ? (
-          <Card icon={<QuoteIcon />} title={`Sobre ${name}`}>
-            <ExpandableText text={p.self_description} title={`Sobre ${name}`} />
+          <Card icon={<QuoteIcon />} title={t("about", { name })}>
+            <ExpandableText text={p.self_description} title={t("about", { name })} />
           </Card>
         ) : null}
 
-        <Card icon={<IDCardIcon />} title="Lo básico">
+        <Card icon={<IDCardIcon />} title={t("basics")}>
           {p.age ? (
             <BasicRow icon={<CalendarIcon />} text={`${p.age} años`} />
           ) : null}
@@ -121,18 +117,18 @@ export default async function MatchProfilePage({
             <BasicRow icon={<UserIcon />} text={genderLabel(p.gender)} />
           ) : null}
           {p.seeking ? (
-            <BasicRow icon={<HeartIcon />} text={`Busca: ${seekingLabel(p.seeking)}`} />
+            <BasicRow icon={<HeartIcon />} text={t("seekingLabel", { seeking: seekingLabel(p.seeking) })} />
           ) : null}
         </Card>
 
         {p.partner_description ? (
-          <Card icon={<SearchIcon />} title={`Lo que ${name} busca`}>
-            <ExpandableText text={p.partner_description} title={`Lo que ${name} busca`} />
+          <Card icon={<SearchIcon />} title={t("lookingFor", { name })}>
+            <ExpandableText text={p.partner_description} title={t("lookingFor", { name })} />
           </Card>
         ) : null}
 
         {p.values.length > 0 ? (
-          <Card icon={<TagIcon />} title="Lo que valora">
+          <Card icon={<TagIcon />} title={t("values")}>
             <div className="flex flex-wrap gap-1.5">
               {p.values.map((v) => (
                 <span
@@ -146,43 +142,33 @@ export default async function MatchProfilePage({
           </Card>
         ) : null}
 
-        <Card icon={<ImageIcon />} title="Fotos">
+        <Card icon={<ImageIcon />} title={t("photos")}>
           {unlocked ? (
             p.photos.length > 0 ? (
               <div className="grid grid-cols-3 gap-1.5">
                 {p.photos.map((url, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-[10px] overflow-hidden bg-bg-2"
-                  >
+                  <div key={i} className="aspect-square rounded-[10px] overflow-hidden bg-bg-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`Foto ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
             ) : (
               <p className="text-[12px] text-ink-3 font-light text-center py-2">
-                Sin fotos todavía.
+                {t("noPhotos")}
               </p>
             )
           ) : (
             <>
               <div className="grid grid-cols-3 gap-1.5 mb-2">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-[10px] bg-bg-2 border-[0.5px] border-dashed border-border-strong flex flex-col items-center justify-center gap-1"
-                  >
+                  <div key={i} className="aspect-square rounded-[10px] bg-bg-2 border-[0.5px] border-dashed border-border-strong flex flex-col items-center justify-center gap-1">
                     <SmallLockIcon />
                   </div>
                 ))}
               </div>
               <p className="text-[11px] text-ink-3 font-light text-center leading-[1.5]">
-                Las fotos se desbloquean cuando cada uno haya enviado al menos {MIN_MESSAGES_PER_USER} mensajes.
+                {t("photosLocked", { count: MIN_MESSAGES_PER_USER })}
               </p>
             </>
           )}
@@ -194,22 +180,12 @@ export default async function MatchProfilePage({
 
 /* ===== Helpers ============================================================ */
 
-function Card({
-  icon,
-  title,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  children: ReactNode;
-}) {
+function Card({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
     <section className="bg-bg rounded-2xl px-4 py-4 border-[0.5px] border-border">
       <div className="flex items-center gap-2 mb-2.5 text-ink-3">
         {icon}
-        <h3 className="text-[11px] uppercase tracking-[0.1em] font-medium">
-          {title}
-        </h3>
+        <h3 className="text-[11px] uppercase tracking-[0.1em] font-medium">{title}</h3>
       </div>
       {children}
     </section>
@@ -227,17 +203,7 @@ function BasicRow({ icon, text }: { icon: ReactNode; text: string }) {
 
 function SmallLockIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#A8A099"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A099" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11 V7 C 8 4.79 9.79 3 12 3 C 14.21 3 16 4.79 16 7 V11" />
     </svg>

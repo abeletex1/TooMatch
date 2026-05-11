@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import Button from "@/components/ui/Button";
@@ -10,23 +11,20 @@ import Divider from "@/components/ui/Divider";
 import GoogleIcon from "@/components/ui/GoogleIcon";
 import { signupAction } from "./actions";
 
-/**
- * Pantalla de creación de cuenta.
- * Email + password (mín 6 caracteres) o Google.
- * Tras crear la cuenta correctamente, redirige a /welcome.
- */
 export default function SignupPage() {
   const [state, formAction, isPending] = useActionState(signupAction, null);
+  const t = useTranslations("auth");
+
   return (
     <MobileShell>
       <Topbar back="/" />
 
       <main className="flex flex-1 flex-col px-7 pt-9 pb-7">
         <h1 className="font-serif text-[32px] text-ink font-medium leading-tight">
-          Crear cuenta
+          {t("createAccount")}
         </h1>
         <p className="text-[13px] text-ink-2 font-light mt-2">
-          Bienvenido. Empecemos.
+          {t("welcome")}
         </p>
 
         <div className="mt-7">
@@ -35,45 +33,45 @@ export default function SignupPage() {
             className="inline-flex items-center justify-center gap-2.5 rounded-xl px-4 py-[13px] text-[13px] bg-bg text-ink border-[0.5px] border-border-strong hover:bg-bg-2 w-full"
           >
             <GoogleIcon size={18} />
-            <span>Continuar con Google</span>
+            <span>{t("googleContinue")}</span>
           </a>
         </div>
 
         <div className="my-3">
-          <Divider text="o con correo" />
+          <Divider text={t("orWithEmail")} />
         </div>
 
         <form action={formAction} className="flex flex-col gap-3">
           <div>
-            <FormLabel htmlFor="signup-email">Correo</FormLabel>
+            <FormLabel htmlFor="signup-email">{t("emailLabel")}</FormLabel>
             <Input
               id="signup-email"
               type="email"
               name="email"
-              placeholder="tu@correo.com"
+              placeholder={t("emailPlaceholder")}
               required
               autoComplete="email"
             />
           </div>
           <div>
-            <FormLabel htmlFor="signup-password">Contraseña</FormLabel>
+            <FormLabel htmlFor="signup-password">{t("passwordLabel")}</FormLabel>
             <Input
               id="signup-password"
               type="password"
               name="password"
-              placeholder="Mínimo 8 caracteres y una mayúscula"
+              placeholder={t("signupPasswordHint")}
               required
               minLength={8}
               autoComplete="new-password"
             />
           </div>
           <div>
-            <FormLabel htmlFor="signup-password-confirm">Confirmar contraseña</FormLabel>
+            <FormLabel htmlFor="signup-password-confirm">{t("confirmPassword")}</FormLabel>
             <Input
               id="signup-password-confirm"
               type="password"
               name="password_confirm"
-              placeholder="Repite tu contraseña"
+              placeholder={t("confirmPasswordPlaceholder")}
               required
               minLength={8}
               autoComplete="new-password"
@@ -93,17 +91,14 @@ export default function SignupPage() {
             disabled={isPending}
             className="mt-2"
           >
-            {isPending ? "Creando cuenta…" : "Crear cuenta"}
+            {isPending ? t("creatingAccount") : t("createAccount")}
           </Button>
         </form>
 
         <p className="text-center text-[12px] text-ink-3 font-light mt-auto pt-6">
-          ¿Ya tienes cuenta?{" "}
-          <Link
-            href="/login"
-            className="text-rose underline underline-offset-2"
-          >
-            Iniciar sesión
+          {t("alreadyHaveAccount")}{" "}
+          <Link href="/login" className="text-rose underline underline-offset-2">
+            {t("signIn")}
           </Link>
         </p>
       </main>

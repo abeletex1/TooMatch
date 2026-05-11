@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
 import ScrollLayout from "@/components/ui/ScrollLayout";
@@ -18,7 +19,8 @@ export default async function ChatsPage() {
     .maybeSingle();
   if (!profile?.onboarding_completed) redirect("/welcome");
 
-  // Obtener matches activos (no deshechos) del usuario
+  const t = await getTranslations("chats");
+
   const { data: matches } = await supabase
     .from("matches")
     .select("id, user1_id, user2_id, created_at")
@@ -31,7 +33,6 @@ export default async function ChatsPage() {
   for (const m of matches ?? []) {
     const partnerId = m.user1_id === user.id ? m.user2_id : m.user1_id;
 
-    // Perfil del partner + último mensaje + mis mensajes en paralelo
     const [{ data: partnerProfile }, { data: lastMsgs }, { count: myMsgCount }, { count: partnerMsgCount }] = await Promise.all([
       supabase
         .from("profiles")
@@ -61,9 +62,9 @@ export default async function ChatsPage() {
     const lastMsg = lastMsgs?.[0];
     const preview = lastMsg
       ? lastMsg.sender_id === user.id
-        ? `Tú: ${lastMsg.content}`
+        ? `${t("youPrefix")}${lastMsg.content}`
         : lastMsg.content
-      : "Aún no hay mensajes";
+      : t("noMessages");
 
     const time = lastMsg
       ? new Date(lastMsg.created_at).toLocaleTimeString("es-ES", {

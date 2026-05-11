@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import MobileShell from "@/components/ui/MobileShell";
 import ScrollLayout from "@/components/ui/ScrollLayout";
@@ -18,18 +19,17 @@ export default async function QuestionPage() {
     .maybeSingle();
   if (!profile?.onboarding_completed) redirect("/welcome");
 
+  const t = await getTranslations("question");
+
   const today = new Date().toISOString().split("T")[0];
-  // Solo preguntas desde el día que se registró el usuario
   const signupDate = user.created_at.split("T")[0];
 
-  // IDs de preguntas ya respondidas por el usuario
   const { data: answers } = await supabase
     .from("daily_answers")
     .select("question_id")
     .eq("user_id", user.id);
   const answeredIds = (answers ?? []).map((a) => (a as { question_id: string }).question_id);
 
-  // Preguntas pendientes desde el día de registro hasta hoy (más antiguas primero)
   let questionsQuery = supabase
     .from("daily_questions")
     .select("id, question_text, options, active_date")
@@ -43,7 +43,6 @@ export default async function QuestionPage() {
 
   const { data: pendingQuestions } = await questionsQuery;
 
-  // Historial de respuestas
   const { data: rawHistory } = await supabase
     .from("daily_answers")
     .select("answer, question_id, daily_questions(question_text, active_date)")
@@ -71,14 +70,14 @@ export default async function QuestionPage() {
 
   return (
     <MobileShell>
-      <ScrollLayout topbarRight="Hoy">
+      <ScrollLayout topbarRight={t("today")}>
         <div className="px-5 pt-5 pb-3">
           <p className="text-[10px] uppercase tracking-[0.12em] text-ink-3 mb-2">
-            Pregunta del día
+            {t("title")}
           </p>
           <h1 className="font-serif text-[24px] text-ink font-medium leading-[1.25] mb-4">
-            La pregunta diaria nos ayuda a{" "}
-            <em className="italic text-rose">entenderte mejor</em>.
+            {t("subtitle1")}{" "}
+            <em className="italic text-rose">{t("subtitle2")}</em>.
           </h1>
 
           <DailyQuestion questions={questions} history={history} />

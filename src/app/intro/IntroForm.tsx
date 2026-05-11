@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import Input, { FormLabel } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { saveIntroAction } from "./actions";
-import { ReactNode } from "react";
 
 function PrefBig({
   selected,
@@ -41,6 +41,8 @@ export default function IntroForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const t = useTranslations("intro");
+  const tCommon = useTranslations("common");
 
   function canSubmit() {
     return name.trim().length > 0 && Number(age) >= 18 && gender !== null && seeking !== null;
@@ -63,40 +65,37 @@ export default function IntroForm() {
 
   return (
     <MobileShell>
-      <Topbar right="Día 0" />
+      <Topbar right={tCommon("day0")} />
 
       <main className="flex flex-1 flex-col px-7 pt-8 pb-7 overflow-y-auto">
         <h1 className="font-serif text-[30px] text-ink font-medium leading-[1.2] mb-2">
-          Cuéntanos un poco{" "}
-          <em className="italic text-rose">sobre ti</em>
+          {t("title1")}{" "}
+          <em className="italic text-rose">{t("title2")}</em>
         </h1>
         <p className="text-[13px] text-ink-2 font-light mb-7">
-          Solo lo básico para empezar.
+          {t("subtitle")}
         </p>
 
         <div className="flex flex-col gap-6">
-
-          {/* Nombre */}
           <div>
-            <FormLabel htmlFor="display_name">Tu nombre</FormLabel>
+            <FormLabel htmlFor="display_name">{t("nameLabel")}</FormLabel>
             <Input
               id="display_name"
               type="text"
-              placeholder="¿Cómo te llamas?"
+              placeholder={t("namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="given-name"
             />
           </div>
 
-          {/* Edad */}
           <div>
-            <FormLabel htmlFor="age">Tu edad</FormLabel>
+            <FormLabel htmlFor="age">{t("ageLabel")}</FormLabel>
             <Input
               id="age"
               type="number"
               inputMode="numeric"
-              placeholder="Ej. 28"
+              placeholder={t("agePlaceholder")}
               value={age}
               onChange={(e) => setAge(e.target.value)}
               min={18}
@@ -105,31 +104,29 @@ export default function IntroForm() {
             />
           </div>
 
-          {/* Género */}
           <div>
-            <FormLabel>Soy</FormLabel>
+            <FormLabel>{t("iAm")}</FormLabel>
             <div className="grid grid-cols-2 gap-2.5 mt-1">
               <PrefBig selected={gender === "male"} onClick={() => setGender("male")}>
-                Hombre
+                {t("man")}
               </PrefBig>
               <PrefBig selected={gender === "female"} onClick={() => setGender("female")}>
-                Mujer
+                {t("woman")}
               </PrefBig>
             </div>
           </div>
 
-          {/* Busco */}
           <div>
-            <FormLabel>Busco</FormLabel>
+            <FormLabel>{t("lookingFor")}</FormLabel>
             <div className="grid grid-cols-3 gap-2.5 mt-1">
               <PrefBig selected={seeking === "male"} onClick={() => setSeeking("male")}>
-                Hombres
+                {t("men")}
               </PrefBig>
               <PrefBig selected={seeking === "female"} onClick={() => setSeeking("female")}>
-                Mujeres
+                {t("women")}
               </PrefBig>
               <PrefBig selected={seeking === "both"} onClick={() => setSeeking("both")}>
-                Ambos
+                {t("both")}
               </PrefBig>
             </div>
           </div>
@@ -145,7 +142,7 @@ export default function IntroForm() {
             onClick={handleSubmit}
             className="mt-2"
           >
-            {isPending ? "Guardando…" : "Continuar →"}
+            {isPending ? tCommon("saving") : tCommon("continueArrow")}
           </Button>
         </div>
       </main>

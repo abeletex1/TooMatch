@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
@@ -13,6 +14,8 @@ import GoogleIcon from "@/components/ui/GoogleIcon";
 
 export default function HomePage() {
   const router = useRouter();
+  const t = useTranslations("auth");
+  const tLang = useTranslations("language");
 
   useEffect(() => {
     const supabase = createClient();
@@ -23,7 +26,18 @@ export default function HomePage() {
 
   return (
     <MobileShell>
-      <Topbar />
+      <Topbar right={
+        <span className="text-[11px] font-medium text-ink-3 px-1.5 py-0.5 rounded border border-border cursor-pointer"
+          onClick={() => {
+            const current = document.cookie.split("; ").find(r => r.startsWith("NEXT_LOCALE="))?.split("=")[1];
+            const next = current === "en" ? "es" : "en";
+            document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000`;
+            window.location.reload();
+          }}
+        >
+          {tLang("current")} / {tLang("switchTo")}
+        </span>
+      } />
 
       <main className="flex flex-1 flex-col px-7 pb-7">
         <section className="flex-1 flex flex-col items-center justify-center py-8">
@@ -35,31 +49,31 @@ export default function HomePage() {
 
         <section className="flex flex-col gap-2.5">
           <p className="text-center text-[10px] tracking-[0.1em] uppercase text-ink-3 mb-2">
-            Crear cuenta
+            {t("createAccount")}
           </p>
 
           <a href="/auth/google" className={buttonClasses("outline", true)}>
             <GoogleIcon size={18} />
-            <span>Continuar con Google</span>
+            <span>{t("googleContinue")}</span>
           </a>
 
-          <Divider text="o con correo" />
+          <Divider text={t("orWithEmail")} />
 
           <Link href="/signup" className={buttonClasses("outline", true)}>
-            Crear cuenta con correo
+            {t("createWithEmail")}
           </Link>
 
           <p className="text-center text-[12px] text-ink-3 font-light mt-3">
-            ¿Ya tienes cuenta?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <Link href="/login" className="text-rose underline underline-offset-2">
-              Iniciar sesión
+              {t("signIn")}
             </Link>
           </p>
 
           <p className="text-center text-[11px] text-ink-3 font-light mt-1 leading-relaxed">
-            Al continuar aceptas nuestros{" "}
-            <Link href="/terms" className="underline">Términos</Link> y{" "}
-            <Link href="/privacy" className="underline">Política de Privacidad</Link>
+            {t("termsAccept")}{" "}
+            <Link href="/terms" className="underline">{t("terms")}</Link> {" "}
+            <Link href="/privacy" className="underline">{t("privacy")}</Link>
           </p>
         </section>
       </main>

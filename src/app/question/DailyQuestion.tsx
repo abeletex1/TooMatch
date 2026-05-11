@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { saveAnswerAction } from "./actions";
 
 type Question = {
@@ -23,11 +24,11 @@ export default function DailyQuestion({
   questions: Question[];
   history: HistoryItem[];
 }) {
+  const t = useTranslations("question");
   const [tab, setTab] = useState<"hoy" | "historial">("hoy");
-  const [currentIdx, setCurrentIdx] = useState(0);
   const [pending, setPending] = useState<string | null>(null);
   const [localHistory, setLocalHistory] = useState<HistoryItem[]>(history);
-  const [answered, setAnswered] = useState<string[]>([]); // IDs respondidas en esta sesión
+  const [answered, setAnswered] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const remaining = questions.filter((q) => !answered.includes(q.id));
@@ -44,39 +45,32 @@ export default function DailyQuestion({
     startTransition(async () => {
       await saveAnswerAction(current.id, pending);
       setLocalHistory((prev) => [
-        {
-          question_text: current.question_text,
-          answer: pending,
-          active_date: current.active_date,
-        },
+        { question_text: current.question_text, answer: pending, active_date: current.active_date },
         ...prev,
       ]);
       setAnswered((prev) => [...prev, current.id]);
       setPending(null);
-      setCurrentIdx((i) => i + 1);
     });
   }
 
+  const TABS = [
+    { key: "hoy" as const, label: remaining.length > 1 ? t("pending", { count: remaining.length }) : t("today") },
+    { key: "historial" as const, label: t("myAnswers") },
+  ];
+
   return (
     <>
-      {/* Tabs */}
       <div className="flex gap-1 bg-bg-2 rounded-xl p-1 mb-4">
-        {(["hoy", "historial"] as const).map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t}
+            key={tabItem.key}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabItem.key)}
             className={`flex-1 py-1.5 rounded-lg text-[12px] font-light transition-colors capitalize ${
-              tab === t
-                ? "bg-bg text-ink shadow-sm"
-                : "text-ink-3 hover:text-ink-2"
+              tab === tabItem.key ? "bg-bg text-ink shadow-sm" : "text-ink-3 hover:text-ink-2"
             }`}
           >
-            {t === "hoy"
-              ? remaining.length > 1
-                ? `Pendientes (${remaining.length})`
-                : "Hoy"
-              : "Mis respuestas"}
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -86,15 +80,15 @@ export default function DailyQuestion({
           {allDone ? (
             <div className="animate-fade-up bg-rose-light border-[0.5px] border-rose-mid rounded-xl px-4 py-3.5 text-center">
               <p className="font-serif italic text-[15px] text-rose-dark leading-[1.45]">
-                Al día. Mañana llegará otra pregunta —{" "}
-                <span className="text-rose">cada respuesta afina tus matches</span>.
+                {t("upToDate")}{" "}
+                <span className="text-rose">{t("upToDateSub")}</span>.
               </p>
             </div>
           ) : (
             <>
               {remaining.length > 1 && (
                 <p className="text-[11px] text-ink-3 font-light mb-3">
-                  {remaining.length} preguntas pendientes · esta es la más antigua
+                  {t("pendingNote", { count: remaining.length })}
                 </p>
               )}
 
@@ -139,7 +133,7 @@ export default function DailyQuestion({
                   {isPending
                     ? "Enviando…"
                     : remaining.length > 1
-                    ? `Enviar y siguiente →`
+                    ? "Enviar y siguiente →"
                     : "Enviar respuesta →"}
                 </button>
               )}

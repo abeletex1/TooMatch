@@ -3,10 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import MatchAvatar from "@/components/ui/MatchAvatar";
 import UnmatchSheet from "@/components/ui/UnmatchSheet";
+import { MIN_MESSAGES_PER_USER } from "@/lib/mock/matches";
+import { createClient } from "@/lib/supabase/client";
+import { sendMessageAction, unmatchAction } from "./actions";
+import type { RealMatch, MessageRow } from "@/lib/types";
+
 function ReadMoreText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations("chat");
   const isLong = text.length > 120;
   return (
     <div>
@@ -15,16 +22,12 @@ function ReadMoreText({ text }: { text: string }) {
       </p>
       {isLong && (
         <button onClick={() => setExpanded(!expanded)} className="text-[12px] text-rose mt-2 hover:opacity-70 transition-opacity">
-          {expanded ? "Ver menos ↑" : "Ver más →"}
+          {expanded ? t("showLess") : t("showMore")}
         </button>
       )}
     </div>
   );
 }
-import { MIN_MESSAGES_PER_USER } from "@/lib/mock/matches";
-import { createClient } from "@/lib/supabase/client";
-import { sendMessageAction, unmatchAction } from "./actions";
-import type { RealMatch, MessageRow } from "@/lib/types";
 
 export default function ChatConversation({
   match,
@@ -38,6 +41,7 @@ export default function ChatConversation({
   isUnmatched: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("chat");
   const [tab, setTab] = useState<"chat" | "perfil">("chat");
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
   const [input, setInput] = useState("");
@@ -67,7 +71,6 @@ export default function ChatConversation({
     if (isUnmatched) router.push("/match");
   }, [isUnmatched, router]);
 
-  // Recarga mensajes al volver a la app y cada 5s como fallback del Realtime
   useEffect(() => {
     async function refetch() {
       if (document.visibilityState !== "visible") return;
@@ -182,19 +185,21 @@ export default function ChatConversation({
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
-  const partnerPronoun =
-    match.gender === "female" ? "Ella" : match.gender === "male" ? "Él" : "Él/ella";
-
   async function confirmUnmatch(reason: string) {
     setUnmatchOpen(false);
     await unmatchAction(match.id, reason);
     router.push("/match");
   }
 
+  const TABS = [
+    { key: "chat" as const, label: t("chat") },
+    { key: "perfil" as const, label: t("profile") },
+  ];
+
   return (
     <div className="flex flex-col bg-bg overflow-hidden fixed inset-0">
 
-      {/* ── Header (siempre visible) ── */}
+      {/* ── Header ── */}
       <div className="shrink-0 bg-bg border-b-[0.5px] border-border">
         <div className="flex items-center gap-2.5 px-4 py-2.5">
           <Link href="/chats" aria-label="Volver"
@@ -209,9 +214,6 @@ export default function ChatConversation({
             ) : (
               <div className="h-[18px] w-24 bg-ink/10 rounded-full blur-[3px] my-0.5" />
             )}
-            {unlocked && (
-              <span className="block text-[10px] text-ink-3 font-light">Desbloqueado</span>
-            )}
           </div>
           <button onClick={() => setUnmatchOpen(true)} aria-label="Opciones"
             className="text-ink-3 hover:text-ink-2 px-2 -mr-1 transition-colors">
@@ -221,15 +223,15 @@ export default function ChatConversation({
           </button>
         </div>
 
-        {/* Tabs Chat / Perfil */}
+        {/* Tabs */}
         <div className="flex">
-          {(["chat", "perfil"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
+          {TABS.map((tabItem) => (
+            <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
               className={`flex-1 py-2 text-[13px] font-medium tracking-wide capitalize transition-colors relative ${
-                tab === t ? "text-ink" : "text-ink-3"
+                tab === tabItem.key ? "text-ink" : "text-ink-3"
               }`}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-              {tab === t && (
+              {tabItem.label}
+              {tab === tabItem.key && (
                 <span className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-rose rounded-full" />
               )}
             </button>
@@ -240,14 +242,11 @@ export default function ChatConversation({
       {/* ── Tab: CHAT ── */}
       {tab === "chat" && (
         <>
-          {/* Contador — desaparece al desbloquear */}
           {!unlocked && (
             <div className="text-[10px] text-ink-3 text-center py-[5px] bg-bg-2 border-b-[0.5px] border-border shrink-0">
-              {myRemaining > 0 && `Tú: ${myCount}/${MIN_MESSAGES_PER_USER}`}
+              {myRemaining > 0 && `${myCount}/${MIN_MESSAGES_PER_USER}`}
               {myRemaining > 0 && partnerRemaining > 0 && " · "}
-              {partnerRemaining > 0 && `Tu match: ${partnerCount}/${MIN_MESSAGES_PER_USER}`}
-              {myRemaining === 0 && partnerRemaining > 0 && " · Esperando que tu match escriba más"}
-              {myRemaining > 0 && partnerRemaining === 0 && " · Tu match ya está listo"}
+              {partnerRemaining > 0 && `${partnerCount}/${MIN_MESSAGES_PER_USER}`}
             </div>
           )}
 
@@ -259,7 +258,6 @@ export default function ChatConversation({
             </div>
           )}
 
-          {/* Mensajes */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
             <div className="flex flex-col justify-end min-h-full px-4 pt-3 pb-2">
               {(() => {
@@ -310,12 +308,11 @@ export default function ChatConversation({
             </div>
           </div>
 
-          {/* Input */}
           <div className="flex items-center gap-2 px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))] border-t-[0.5px] border-border bg-bg shrink-0">
             <input value={input} onChange={handleInputChange} onKeyDown={handleKey} onFocus={handleFocus}
-              placeholder="Escribe un mensaje…" disabled={sending}
+              placeholder={t("typeMessage")} disabled={sending}
               className="flex-1 min-w-0 border-[0.5px] border-border-strong rounded-full px-4 py-2.5 text-[16px] font-light bg-bg text-ink outline-none focus:border-rose disabled:opacity-60" />
-            <button onClick={send} disabled={!input.trim() || sending} aria-label="Enviar"
+            <button onClick={send} disabled={!input.trim() || sending} aria-label={t("send")}
               className="shrink-0 w-9 h-9 rounded-full bg-ink text-bg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity">
               {sending ? <span className="text-[15px] leading-none">…</span> : (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -330,7 +327,6 @@ export default function ChatConversation({
       {/* ── Tab: PERFIL ── */}
       {tab === "perfil" && (
         <div className="flex-1 overflow-y-auto pb-6">
-          {/* Foto */}
           <div className="relative w-full aspect-[3/4] bg-bg-2 overflow-hidden">
             {match.photos[0] ? (
               <img src={match.photos[0]} alt={match.name}
@@ -344,7 +340,7 @@ export default function ChatConversation({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                 <div className="bg-bg/80 backdrop-blur-sm rounded-2xl px-5 py-3 text-center">
                   <p className="font-serif italic text-[14px] text-ink">Foto bloqueada</p>
-                  <p className="text-[11px] text-ink-3 mt-1">Tú {myCount}/{MIN_MESSAGES_PER_USER} · {partnerPronoun} {partnerCount}/{MIN_MESSAGES_PER_USER}</p>
+                  <p className="text-[11px] text-ink-3 mt-1">{myCount}/{MIN_MESSAGES_PER_USER} · {partnerCount}/{MIN_MESSAGES_PER_USER}</p>
                 </div>
               </div>
             )}
@@ -359,7 +355,6 @@ export default function ChatConversation({
           </div>
 
           <div className="px-5 pt-5 flex flex-col gap-4">
-            {/* Compatibilidad */}
             {match.compatibility > 0 && (
               <div className="bg-rose-light border-[0.5px] border-rose-mid rounded-2xl px-4 py-3">
                 <p className="text-[10px] uppercase tracking-widest text-rose-dark mb-2">Compatibilidad</p>
@@ -381,15 +376,15 @@ export default function ChatConversation({
               </div>
             )}
 
-            {/* Sobre él/ella */}
             {match.self_description && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4 overflow-hidden">
-                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">{nameVisible ? `Sobre ${match.name.split(" ")[0]}` : "Sobre este perfil"}</p>
+                <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">
+                  {nameVisible ? `${t("aboutProfile")} ${match.name.split(" ")[0]}` : t("aboutProfile")}
+                </p>
                 <ReadMoreText text={match.self_description} />
               </div>
             )}
 
-            {/* Valores */}
             {match.values.length > 0 && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4">
                 <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-3">Valores</p>
@@ -410,7 +405,6 @@ export default function ChatConversation({
               </div>
             )}
 
-            {/* Lo que busca */}
             {match.partner_description && (
               <div className="bg-bg-2 rounded-2xl px-4 py-4 overflow-hidden">
                 <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">Lo que busca</p>
@@ -421,7 +415,7 @@ export default function ChatConversation({
         </div>
       )}
 
-      <UnmatchSheet matchName={nameVisible ? match.name : "Tu match"} open={unmatchOpen}
+      <UnmatchSheet matchName={nameVisible ? match.name : t("yourMatch")} open={unmatchOpen}
         onClose={() => setUnmatchOpen(false)} onConfirm={confirmUnmatch} />
     </div>
   );

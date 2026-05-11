@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { buttonClasses } from "@/components/ui/Button";
 import InfinitySymbol from "@/components/ui/InfinitySymbol";
 import MobileShell from "@/components/ui/MobileShell";
@@ -9,13 +10,11 @@ import Topbar from "@/components/ui/Topbar";
 import { logoutAction } from "@/app/logout/actions";
 import { usePush } from "@/lib/use-push";
 
-export default function Day0Client({
-  nextHref,
-}: {
-  nextHref: string;
-}) {
+export default function Day0Client({ nextHref }: { nextHref: string }) {
   const { supported, subscribed, loading, subscribe } = usePush();
   const [decided, setDecided] = useState(false);
+  const t = useTranslations("day0");
+  const tCommon = useTranslations("common");
 
   const showNotifCard = supported && !subscribed && !decided;
 
@@ -30,7 +29,7 @@ export default function Day0Client({
 
   return (
     <MobileShell>
-      <Topbar right="Día 0" />
+      <Topbar right={tCommon("day0")} />
 
       <main className="flex flex-1 flex-col items-center justify-center px-7 pb-7 text-center animate-fade-up">
         <div className="w-16 h-16 rounded-2xl bg-rose-light flex items-center justify-center mb-6">
@@ -38,56 +37,51 @@ export default function Day0Client({
         </div>
 
         <p className="text-[10px] uppercase tracking-[0.12em] text-ink-3 mb-3">
-          Día 0
+          {tCommon("day0")}
         </p>
 
         <h1 className="font-serif text-[30px] text-ink font-medium leading-[1.2] mb-3">
-          Perfil <em className="italic text-rose">completado.</em>
+          {t("title1")} <em className="italic text-rose">{t("title2")}</em>
         </h1>
 
         <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[300px]">
-          Mañana llega tu <span className="text-ink">primer match</span>. Lo
-          eligimos con calma para que tenga sentido — sin scroll, sin prisa.
+          {t("subtitle1")} <span className="text-ink">{t("subtitle2")}</span>. {t("body1")}
         </p>
 
         <div className="w-9 h-[1.5px] bg-rose-mid rounded-sm my-7" />
 
         <p className="font-serif italic text-[16px] text-ink leading-[1.5] max-w-[280px]">
-          Lo bueno se hace esperar. Un día.
+          {t("body2")}
         </p>
 
-        {/* Card de notificaciones — solo si aplica y no ha decidido */}
         {showNotifCard ? (
           <div className="w-full mt-10 bg-bg-2 rounded-2xl px-5 py-5 text-left border-[0.5px] border-border">
             <p className="text-[10px] uppercase tracking-[0.12em] text-rose font-medium mb-2">
-              ✦ No te pierdas tu match
+              {t("notifCta")}
             </p>
             <p className="text-[13px] text-ink font-medium mb-1">
-              Activa las notificaciones
+              {t("notifTitle")}
             </p>
             <p className="text-[12px] text-ink-2 font-light leading-[1.6] mb-4">
-              Te avisamos cuando llegue tu match y cuando tu conversación avance. Sin spam.
+              {t("notifBody")}
             </p>
             <button
               onClick={handleActivate}
               disabled={loading}
               className={`${buttonClasses("rose", true)} disabled:opacity-60`}
             >
-              {loading ? "Activando…" : "Activar notificaciones →"}
+              {loading ? t("notifActivating") : t("notifButton")}
             </button>
             <button
               onClick={handleSkip}
               className="w-full mt-2.5 text-[12px] text-ink-3 font-light py-1 hover:text-ink-2 transition-colors"
             >
-              Ahora no
+              {t("notifLater")}
             </button>
           </div>
         ) : (
-          <Link
-            href={nextHref}
-            className={`${buttonClasses("rose", true)} mt-12`}
-          >
-            Ver mi inicio
+          <Link href={nextHref} className={`${buttonClasses("rose", true)} mt-12`}>
+            {t("viewHome")}
           </Link>
         )}
 
@@ -96,7 +90,7 @@ export default function Day0Client({
             type="submit"
             className="text-[11px] text-ink-3 font-light hover:text-rose-dark hover:underline underline-offset-2"
           >
-            Cerrar sesión
+            {tCommon("logout")}
           </button>
         </form>
       </main>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ReactNode, useEffect, useState } from "react";
 import { getBadgeCounts, type BadgeCounts } from "@/lib/badges";
 
@@ -67,19 +68,20 @@ function DotBadge() {
 
 type Tab = {
   href: string;
-  label: string;
+  labelKey: "question" | "match" | "chats" | "profile";
   icon: (props: { active: boolean }) => ReactNode;
 };
 
 const TABS: Tab[] = [
-  { href: "/question", label: "Pregunta", icon: QuestionIcon },
-  { href: "/match",    label: "Match",    icon: MatchIcon },
-  { href: "/chats",   label: "Chats",    icon: ChatsIcon },
-  { href: "/profile", label: "Perfil",   icon: ProfileIcon },
+  { href: "/question", labelKey: "question", icon: QuestionIcon },
+  { href: "/match",    labelKey: "match",    icon: MatchIcon },
+  { href: "/chats",   labelKey: "chats",    icon: ChatsIcon },
+  { href: "/profile", labelKey: "profile",  icon: ProfileIcon },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [badges, setBadges] = useState<BadgeCounts>({
     unreadChats: 0,
     hasNewMatch: false,
@@ -108,7 +110,7 @@ export default function BottomNav() {
               {tab.href === "/question" && badges.hasUnansweredQuestion && <DotBadge />}
             </div>
             <span className={`text-[9px] tracking-[0.07em] uppercase ${active ? "text-rose" : "text-ink-3"}`}>
-              {tab.label}
+              {t(tab.labelKey)}
             </span>
           </Link>
         );

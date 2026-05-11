@@ -1,38 +1,30 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
 import { buttonClasses } from "@/components/ui/Button";
 
-/**
- * Pantalla genérica para cuando un enlace de auth (confirmación, magic link)
- * ha caducado o es inválido.
- */
-export default function AuthErrorPage() {
+export default async function AuthErrorPage() {
+  const t = await getTranslations("authError");
+  const tAuth = await getTranslations("auth");
+
   return (
     <MobileShell>
       <Topbar />
 
       <main className="flex flex-1 flex-col items-center justify-center px-7 pb-7 text-center">
         <h1 className="font-serif text-[28px] text-ink font-medium leading-tight">
-          Enlace no válido
+          {t("title")}
         </h1>
         <p className="text-[13px] text-ink-2 font-light mt-3 max-w-[300px] leading-relaxed">
-          El enlace de confirmación ha caducado o ya se ha usado. Crea cuenta
-          de nuevo para recibir uno fresco, o inicia sesión si ya activaste
-          la tuya antes.
+          {t("description")}
         </p>
 
-        <Link
-          href="/signup"
-          className={`${buttonClasses("ink", true)} mt-8`}
-        >
-          Crear cuenta
+        <Link href="/signup" className={`${buttonClasses("ink", true)} mt-8`}>
+          {tAuth("createAccount")}
         </Link>
-        <Link
-          href="/login"
-          className={`${buttonClasses("outline", true)} mt-2.5`}
-        >
-          Iniciar sesión
+        <Link href="/login" className={`${buttonClasses("outline", true)} mt-2.5`}>
+          {tAuth("signIn")}
         </Link>
       </main>
     </MobileShell>

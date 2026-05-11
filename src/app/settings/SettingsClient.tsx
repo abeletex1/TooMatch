@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { changePasswordAction, changeEmailAction, resetOnboardingAction, deleteAccountAction, logoutAction } from "./actions";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -31,13 +32,15 @@ function Row({ icon, label, onClick, destructive = false }: {
   );
 }
 
-function InlineForm({ title, onClose, fields, submitLabel, action }: {
+function InlineForm({ title, onClose, fields, submitLabel, successMsg, action }: {
   title: string;
   onClose: () => void;
   fields: { name: string; label: string; type: string; placeholder: string }[];
   submitLabel: string;
+  successMsg: string;
   action: (fd: FormData) => Promise<{ error?: string; success?: boolean }>;
 }) {
+  const t = useTranslations("common");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -59,12 +62,10 @@ function InlineForm({ title, onClose, fields, submitLabel, action }: {
         <div className="bg-bg rounded-t-[24px] w-full max-w-[420px] px-6 pt-5 pb-10" onClick={(e) => e.stopPropagation()}>
           <div className="w-9 h-[3px] bg-bg-3 rounded-full mx-auto mb-5" />
           <div className="text-center py-6">
-            <p className="font-serif text-[20px] text-ink mb-2">¡Hecho!</p>
-            <p className="text-[13px] text-ink-3 font-light">
-              {title.includes("email") ? "Revisa tu correo para confirmar el cambio." : "Cambio guardado correctamente."}
-            </p>
+            <p className="font-serif text-[20px] text-ink mb-2">{t("done")}</p>
+            <p className="text-[13px] text-ink-3 font-light">{successMsg}</p>
           </div>
-          <button onClick={onClose} className="w-full py-3 rounded-xl bg-ink text-bg text-[14px]">Cerrar</button>
+          <button onClick={onClose} className="w-full py-3 rounded-xl bg-ink text-bg text-[14px]">{t("close")}</button>
         </div>
       </div>
     );
@@ -86,7 +87,7 @@ function InlineForm({ title, onClose, fields, submitLabel, action }: {
           {error && <p className="text-[12px] text-red-500">{error}</p>}
           <button type="submit" disabled={pending}
             className="mt-2 py-3 rounded-xl bg-ink text-bg text-[14px] disabled:opacity-50">
-            {pending ? "Guardando…" : submitLabel}
+            {pending ? t("saving") : submitLabel}
           </button>
         </form>
       </div>
@@ -95,105 +96,102 @@ function InlineForm({ title, onClose, fields, submitLabel, action }: {
 }
 
 export default function SettingsClient({ email, isAdmin = false }: { email: string; isAdmin?: boolean }) {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const [sheet, setSheet] = useState<"password" | "email" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
     <div className="flex flex-col bg-bg-2 min-h-full pb-8">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-bg border-b-[0.5px] border-border">
         <Link href="/profile" className="text-rose text-[22px] leading-none px-1 -ml-1">←</Link>
-        <h1 className="font-serif text-[18px] text-ink font-medium">Ajustes de cuenta</h1>
+        <h1 className="font-serif text-[18px] text-ink font-medium">{t("title")}</h1>
       </div>
 
       <div className="pt-2">
-        {/* Cuenta */}
-        <Section title="Cuenta">
+        <Section title={t("sectionAccount")}>
           <div className="px-4 py-3 bg-bg">
-            <p className="text-[11px] text-ink-3">Email actual</p>
+            <p className="text-[11px] text-ink-3">{t("currentEmail")}</p>
             <p className="text-[14px] text-ink font-light">{email}</p>
           </div>
-          <Row icon={<MailIcon />} label="Cambiar email" onClick={() => setSheet("email")} />
-          <Row icon={<LockIcon />} label="Cambiar contraseña" onClick={() => setSheet("password")} />
+          <Row icon={<MailIcon />} label={t("changeEmail")} onClick={() => setSheet("email")} />
+          <Row icon={<LockIcon />} label={t("changePassword")} onClick={() => setSheet("password")} />
         </Section>
 
-        {/* Preferencias */}
-        <Section title="Preferencias">
-          <Row icon={<RefreshIcon />} label="Repetir onboarding"
+        <Section title={t("sectionPreferences")}>
+          <Row icon={<RefreshIcon />} label={t("repeatOnboarding")}
             onClick={() => startTransition(() => resetOnboardingAction())} />
         </Section>
 
-        {/* Legal */}
-        <Section title="Legal">
+        <Section title={t("sectionLegal")}>
           <Link href="/privacy" className="flex items-center gap-3 px-4 py-3.5 hover:bg-bg-2 transition-colors">
             <span className="text-ink-3"><DocIcon /></span>
-            <span className="text-[14px] font-light text-ink flex-1">Política de privacidad</span>
+            <span className="text-[14px] font-light text-ink flex-1">{t("privacyPolicy")}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3"><path d="M9 18l6-6-6-6" /></svg>
           </Link>
           <Link href="/terms" className="flex items-center gap-3 px-4 py-3.5 hover:bg-bg-2 transition-colors">
             <span className="text-ink-3"><DocIcon /></span>
-            <span className="text-[14px] font-light text-ink flex-1">Términos de uso</span>
+            <span className="text-[14px] font-light text-ink flex-1">{t("termsOfUse")}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3"><path d="M9 18l6-6-6-6" /></svg>
           </Link>
         </Section>
 
-        {/* Panel admin — solo visible para el admin */}
         {isAdmin && (
-          <Section title="Administración">
+          <Section title={t("sectionAdmin")}>
             <Link href="/admin" className="flex items-center gap-3 px-4 py-3.5 hover:bg-bg-2 transition-colors">
               <span className="text-ink-3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                 </svg>
               </span>
-              <span className="text-[14px] font-light text-ink flex-1">Panel de admin — crear matches</span>
+              <span className="text-[14px] font-light text-ink flex-1">{t("adminPanel")}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
           </Section>
         )}
 
-        {/* Sesión y cuenta */}
-        <Section title="Sesión">
-          <Row icon={<LogoutIcon />} label="Cerrar sesión"
+        <Section title={t("sectionSession")}>
+          <Row icon={<LogoutIcon />} label={t("logout")}
             onClick={() => startTransition(() => logoutAction())} />
-          <Row icon={<TrashIcon />} label="Eliminar cuenta" destructive onClick={() => setConfirmDelete(true)} />
+          <Row icon={<TrashIcon />} label={t("deleteAccount")} destructive onClick={() => setConfirmDelete(true)} />
         </Section>
       </div>
 
-      {/* Sheet cambio email */}
       {sheet === "email" && (
-        <InlineForm title="Cambiar email" onClose={() => setSheet(null)}
-          fields={[{ name: "email", label: "Nuevo email", type: "email", placeholder: "tu@email.com" }]}
-          submitLabel="Enviar confirmación" action={changeEmailAction} />
+        <InlineForm title={t("changeEmailTitle")} onClose={() => setSheet(null)}
+          fields={[{ name: "email", label: t("newEmailLabel"), type: "email", placeholder: t("newEmailPlaceholder") }]}
+          submitLabel={t("sendConfirmation")}
+          successMsg={t("emailChangeSent")}
+          action={changeEmailAction} />
       )}
 
-      {/* Sheet cambio contraseña */}
       {sheet === "password" && (
-        <InlineForm title="Cambiar contraseña" onClose={() => setSheet(null)}
+        <InlineForm title={t("changePasswordTitle")} onClose={() => setSheet(null)}
           fields={[
-            { name: "password", label: "Nueva contraseña", type: "password", placeholder: "Mínimo 8 caracteres y 1 mayúscula" },
-            { name: "confirm", label: "Confirmar contraseña", type: "password", placeholder: "Repite la contraseña" },
+            { name: "password", label: t("newPasswordLabel"), type: "password", placeholder: t("newPasswordHint") },
+            { name: "confirm", label: t("confirmPasswordLabel"), type: "password", placeholder: t("confirmPasswordPlaceholder") },
           ]}
-          submitLabel="Guardar contraseña" action={changePasswordAction} />
+          submitLabel={t("savePassword")}
+          successMsg={t("passwordChanged")}
+          action={changePasswordAction} />
       )}
 
-      {/* Confirmación eliminar cuenta */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setConfirmDelete(false)}>
           <div className="bg-bg rounded-t-[24px] w-full max-w-[420px] px-6 pt-5 pb-10" onClick={(e) => e.stopPropagation()}>
             <div className="w-9 h-[3px] bg-bg-3 rounded-full mx-auto mb-5" />
-            <h3 className="font-serif text-[18px] text-ink font-medium mb-2">¿Eliminar cuenta?</h3>
+            <h3 className="font-serif text-[18px] text-ink font-medium mb-2">{t("deleteTitle")}</h3>
             <p className="text-[13px] text-ink-3 font-light mb-6 leading-relaxed">
-              Se borrarán todos tus datos y no podrás recuperarlos. Esta acción es irreversible.
+              {t("deleteBody")}
             </p>
             <div className="flex flex-col gap-2">
               <button onClick={() => startTransition(() => deleteAccountAction())} disabled={pending}
                 className="py-3 rounded-xl bg-red-500 text-white text-[14px] disabled:opacity-50">
-                {pending ? "Eliminando…" : "Sí, eliminar mi cuenta"}
+                {pending ? "..." : t("deleteConfirm")}
               </button>
               <button onClick={() => setConfirmDelete(false)}
-                className="py-3 rounded-xl bg-bg-2 text-ink text-[14px]">Cancelar</button>
+                className="py-3 rounded-xl bg-bg-2 text-ink text-[14px]">{tCommon("cancel")}</button>
             </div>
           </div>
         </div>
