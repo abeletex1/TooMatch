@@ -41,7 +41,12 @@
     "confirmPasswordPlaceholder": "Repite tu contraseña",
     "creatingAccount": "Creando cuenta…",
     "checkEmail": "Revisa tu correo para confirmar el cambio.",
-    "createWithEmail": "Crear cuenta con correo"
+    "createWithEmail": "Crear cuenta con correo",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordTitle": "Recuperar contraseña",
+    "forgotPasswordBody": "Escribe tu email y te enviaremos un enlace para restablecerla.",
+    "sendResetLink": "Enviar enlace",
+    "resetLinkSent": "Revisa tu correo — te hemos enviado un enlace."
   },
   "authError": {
     "title": "Enlace no válido",
@@ -280,6 +285,7 @@
     "changeEmail": "Cambiar email",
     "changePassword": "Cambiar contraseña",
     "sectionPreferences": "Preferencias",
+    "language": "Idioma",
     "repeatOnboarding": "Repetir onboarding",
     "sectionLegal": "Legal",
     "privacyPolicy": "Política de privacidad",

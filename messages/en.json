@@ -41,7 +41,12 @@
     "confirmPasswordPlaceholder": "Repeat your password",
     "creatingAccount": "Creating account…",
     "checkEmail": "Check your email to confirm the change.",
-    "createWithEmail": "Create account with email"
+    "createWithEmail": "Create account with email",
+    "forgotPassword": "Forgot your password?",
+    "forgotPasswordTitle": "Recover password",
+    "forgotPasswordBody": "Enter your email and we'll send you a link to reset your password.",
+    "sendResetLink": "Send link",
+    "resetLinkSent": "Check your email — we've sent you a reset link."
   },
   "authError": {
     "title": "Invalid link",
@@ -280,6 +285,7 @@
     "changeEmail": "Change email",
     "changePassword": "Change password",
     "sectionPreferences": "Preferences",
+    "language": "Language",
     "repeatOnboarding": "Redo onboarding",
     "sectionLegal": "Legal",
     "privacyPolicy": "Privacy policy",

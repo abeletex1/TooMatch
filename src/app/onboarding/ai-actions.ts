@@ -5,17 +5,27 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PROMPTS = {
-  self: `Eres un asistente que ayuda a personas a presentarse en una app de citas llamada Too Match.
-El usuario ha escrito o dictado lo siguiente sobre sí mismo de forma desordenada o informal.
-Reescríbelo en primera persona, de forma natural, honesta y cercana.
-Mantén exactamente el mismo significado y tono personal — no añadas nada que no esté en el texto original.
-Devuelve solo el texto reescrito, sin explicaciones ni comillas.`,
+  self: `You help users tidy up what they've written about themselves in a dating app.
+The user has written or dictated the following in an informal or disorganized way.
 
-  partner: `Eres un asistente que ayuda a personas a describir qué buscan en una pareja en una app de citas llamada Too Match.
-El usuario ha escrito o dictado lo siguiente de forma desordenada o informal.
-Reescríbelo en primera persona, de forma natural y clara.
-Mantén exactamente el mismo significado — no añadas nada que no esté en el texto original.
-Devuelve solo el texto reescrito, sin explicaciones ni comillas.`,
+Your ONLY job: fix spelling and punctuation, join fragmented sentences, improve readability.
+STRICT RULES:
+- Do NOT add any new ideas, adjectives, or phrases that aren't already in the text.
+- Do NOT change the meaning or add anything the user hasn't said.
+- Keep the exact same personal tone and first-person voice.
+- Respond in the same language as the input text.
+- Return only the cleaned text, no explanations or quotes.`,
+
+  partner: `You help users tidy up what they've written about what they're looking for in a partner in a dating app.
+The user has written or dictated the following in an informal or disorganized way.
+
+Your ONLY job: fix spelling and punctuation, join fragmented sentences, improve readability.
+STRICT RULES:
+- Do NOT add any new ideas, adjectives, or phrases that aren't already in the text.
+- Do NOT change the meaning or add anything the user hasn't said.
+- Keep the exact same personal tone and first-person voice.
+- Respond in the same language as the input text.
+- Return only the cleaned text, no explanations or quotes.`,
 };
 
 export async function organizeTextAction(

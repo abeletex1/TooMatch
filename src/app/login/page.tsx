@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import MobileShell from "@/components/ui/MobileShell";
@@ -9,10 +9,12 @@ import Button from "@/components/ui/Button";
 import Input, { FormLabel } from "@/components/ui/Input";
 import Divider from "@/components/ui/Divider";
 import GoogleIcon from "@/components/ui/GoogleIcon";
-import { loginAction } from "./actions";
+import { loginAction, resetPasswordAction } from "./actions";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
+  const [resetState, resetAction, resetPending] = useActionState(resetPasswordAction, null);
+  const [showReset, setShowReset] = useState(false);
   const t = useTranslations("auth");
 
   return (
@@ -63,6 +65,13 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowReset(!showReset)}
+              className="text-[11px] text-ink-3 hover:text-rose-dark underline underline-offset-2 mt-1.5 block"
+            >
+              {t("forgotPassword")}
+            </button>
           </div>
 
           {state?.error ? (
@@ -81,6 +90,35 @@ export default function LoginPage() {
             {isPending ? t("signingIn") : t("signIn")}
           </Button>
         </form>
+
+        {showReset && (
+          <div className="mt-4 p-4 bg-bg-2 rounded-xl border-[0.5px] border-border">
+            <p className="text-[12px] text-ink-2 font-light mb-3">{t("forgotPasswordBody")}</p>
+            {resetState?.error === undefined && resetState !== null ? (
+              <p className="text-[12px] text-rose font-light">{t("resetLinkSent")}</p>
+            ) : (
+              <form action={resetAction} className="flex gap-2">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder={t("emailPlaceholder")}
+                  required
+                  className="flex-1 border-[0.5px] border-border-strong rounded-xl px-3 py-2 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose"
+                />
+                <button
+                  type="submit"
+                  disabled={resetPending}
+                  className="px-3 py-2 rounded-xl bg-ink text-bg text-[12px] font-light disabled:opacity-50 shrink-0"
+                >
+                  {resetPending ? "…" : t("sendResetLink")}
+                </button>
+              </form>
+            )}
+            {resetState?.error && (
+              <p className="text-[11px] text-rose-dark mt-2">{resetState.error}</p>
+            )}
+          </div>
+        )}
 
         <p className="text-center text-[12px] text-ink-3 font-light mt-auto pt-6">
           {t("dontHaveAccount")}{" "}

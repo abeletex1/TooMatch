@@ -98,6 +98,7 @@ function InlineForm({ title, onClose, fields, submitLabel, successMsg, action }:
 export default function SettingsClient({ email, isAdmin = false }: { email: string; isAdmin?: boolean }) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
+  const tLang = useTranslations("language");
   const [sheet, setSheet] = useState<"password" | "email" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -120,6 +121,13 @@ export default function SettingsClient({ email, isAdmin = false }: { email: stri
         </Section>
 
         <Section title={t("sectionPreferences")}>
+          <Row icon={<GlobeIcon />} label={`${t("language")}: ${tLang("current")} → ${tLang("switchTo")}`}
+            onClick={() => {
+              const current = document.cookie.split("; ").find(r => r.startsWith("NEXT_LOCALE="))?.split("=")[1];
+              const next = current === "en" ? "es" : "en";
+              document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000`;
+              window.location.reload();
+            }} />
           <Row icon={<RefreshIcon />} label={t("repeatOnboarding")}
             onClick={() => startTransition(() => resetOnboardingAction())} />
         </Section>
@@ -217,4 +225,7 @@ function TrashIcon() {
 }
 function DocIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+}
+function GlobeIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
 }
