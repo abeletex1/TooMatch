@@ -5,8 +5,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * Refresca la sesión de Supabase en cada request. Esto es necesario
  * para que los Server Components vean el usuario autenticado más reciente.
  */
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, extraHeaders?: Record<string, string>) {
+  const requestHeaders = new Headers(request.headers);
+  if (extraHeaders) {
+    Object.entries(extraHeaders).forEach(([k, v]) => requestHeaders.set(k, v));
+  }
+
+  let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +25,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );

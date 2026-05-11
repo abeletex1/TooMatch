@@ -1,15 +1,14 @@
 import { type NextRequest } from "next/server";
-import createMiddleware from "next-intl/middleware";
 import { updateSession } from "@/lib/supabase/middleware";
 import { routing } from "@/i18n/routing";
 
-const intlMiddleware = createMiddleware(routing);
-
 export async function middleware(request: NextRequest) {
-  const intlResponse = intlMiddleware(request);
-  if (intlResponse && intlResponse.status !== 200) return intlResponse;
+  const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
+  const locale = (cookieLocale && (routing.locales as readonly string[]).includes(cookieLocale))
+    ? cookieLocale
+    : routing.defaultLocale;
 
-  return await updateSession(request);
+  return await updateSession(request, { "x-next-intl-locale": locale });
 }
 
 export const config = {
