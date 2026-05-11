@@ -27,7 +27,9 @@ export default function HomePage() {
   return (
     <MobileShell>
       <Topbar right={
-        <span className="text-[11px] font-medium text-ink-3 px-1.5 py-0.5 rounded border border-border cursor-pointer"
+        <button
+          type="button"
+          className="text-[12px] font-medium text-ink-2 px-2.5 py-1 rounded-lg bg-bg-2 border border-border active:bg-bg-3"
           onClick={() => {
             const current = document.cookie.split("; ").find(r => r.startsWith("NEXT_LOCALE="))?.split("=")[1];
             const next = current === "en" ? "es" : "en";
@@ -35,8 +37,8 @@ export default function HomePage() {
             window.location.reload();
           }}
         >
-          {tLang("current")} / {tLang("switchTo")}
-        </span>
+          {tLang("current")} → {tLang("switchTo")}
+        </button>
       } />
 
       <main className="flex flex-1 flex-col px-7 pb-7">
