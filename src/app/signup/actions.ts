@@ -3,28 +3,28 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export type SignupState = { error?: string } | null;
 
-/**
- * Crea una cuenta con email + password.
- *
- * Flujo:
- *  1. supabase.auth.signUp envía un email de confirmación al usuario.
- *  2. emailRedirectTo le dice a Supabase: "cuando el usuario haga clic
- *     en el enlace, redirígelo aquí con un ?code=..."
- *  3. /auth/callback (route handler) intercambia ese code por una sesión.
- *
- * Aquí, tras llamar a signUp, redirigimos al usuario a /signup/check-email
- * para que sepa que tiene que ir a su correo.
- */
+async function getIP(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+}
+
 export async function signupAction(
   _prev: SignupState,
   formData: FormData
 ): Promise<SignupState> {
+  const ip = await getIP();
+  // Máximo 5 cuentas nuevas por IP cada hora
+  const rl = checkRateLimit(`signup:${ip}`, 5, 60 * 60 * 1000);
+  if (!rl.allowed) {
+    return { error: "Demasiados registros desde esta conexión. Espera una hora." };
+  }
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-
   const passwordConfirm = String(formData.get("password_confirm") ?? "");
 
   if (!email) return { error: "Introduce tu correo." };
@@ -38,8 +38,6 @@ export async function signupAction(
     return { error: "Las contraseñas no coinciden." };
   }
 
-  // Construye la URL pública del sitio para que Supabase sepa a dónde
-  // mandar al usuario tras hacer clic en el email.
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3000";
   const protocol = host.includes("localhost") ? "http" : "https";

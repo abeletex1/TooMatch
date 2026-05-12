@@ -291,6 +291,9 @@ function AiTextHelper({
   );
 }
 
+/* ===== Wrong Intent Modal ================================================= */
+
+
 /* ===== Step 1: ¿Quién eres? ============================================== */
 
 function Step1({
@@ -302,7 +305,7 @@ function Step1({
 }) {
   const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
-  const minChars = 30;
+  const minChars = 150;
   const text = data.self_description;
 
   const guides = [t("step1Prompt1"), t("step1Prompt2"), t("step1Prompt3")];
@@ -346,6 +349,11 @@ function Step1({
       >
         {text.length} / {t("step1Min")} {minChars}
       </p>
+      {text.length > 0 && text.length < minChars && (
+        <p className="text-[11px] text-rose-dark font-light mt-1">
+          {t("step1TooShort", { min: minChars })}
+        </p>
+      )}
       <AiTextHelper text={text} onUpdate={(v) => update({ self_description: v })} field="self" />
     </>
   );
@@ -362,7 +370,7 @@ function Step2({
 }) {
   const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
-  const minChars = 30;
+  const minChars = 150;
   const text = data.partner_description;
 
   const guides = [t("step2Prompt1"), t("step2Prompt2"), t("step2Prompt3"), t("step2Prompt4")];
@@ -406,7 +414,13 @@ function Step2({
       >
         {text.length} / {t("step1Min")} {minChars}
       </p>
+      {text.length > 0 && text.length < minChars && (
+        <p className="text-[11px] text-rose-dark font-light mt-1">
+          {t("step1TooShort", { min: minChars })}
+        </p>
+      )}
       <AiTextHelper text={text} onUpdate={(v) => update({ partner_description: v })} field="partner" />
+
     </>
   );
 }
@@ -672,21 +686,45 @@ function Step6({
 }) {
   const t = useTranslations("onboarding");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [dragSource, setDragSource] = useState<number | null>(null);
+  const [dragTarget, setDragTarget] = useState<number | null>(null);
 
-  function handlePhotoTap(i: number) {
-    if (selectedIdx === null) {
-      setSelectedIdx(i);
-    } else if (selectedIdx === i) {
-      setSelectedIdx(null);
-    } else {
-      const newPhotos = [...data.photos];
-      [newPhotos[selectedIdx], newPhotos[i]] = [newPhotos[i], newPhotos[selectedIdx]];
-      update({ photos: newPhotos });
-      setSelectedIdx(null);
+  function getSlotAt(x: number, y: number): number | null {
+    if (!gridRef.current) return null;
+    const els = gridRef.current.querySelectorAll<HTMLElement>("[data-slot]");
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return Number(el.dataset.slot);
+      }
     }
+    return null;
+  }
+
+  function handleDragStart(e: React.PointerEvent<HTMLDivElement>, i: number) {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragSource(i);
+    setDragTarget(i);
+  }
+
+  function handleDragMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (dragSource === null) return;
+    const slot = getSlotAt(e.clientX, e.clientY);
+    if (slot !== null && slot !== dragTarget) setDragTarget(slot);
+  }
+
+  function handleDragEnd() {
+    if (dragSource !== null && dragTarget !== null && dragSource !== dragTarget) {
+      const newPhotos = [...data.photos];
+      [newPhotos[dragSource], newPhotos[dragTarget]] = [newPhotos[dragTarget], newPhotos[dragSource]];
+      update({ photos: newPhotos });
+    }
+    setDragSource(null);
+    setDragTarget(null);
   }
 
   function openPicker() {
@@ -768,25 +806,37 @@ function Step6({
         onChange={handleFileChange}
       />
 
-      {selectedIdx !== null && (
+      {dragSource !== null && (
         <p className="text-[11px] text-rose font-light mb-2 text-center animate-fade-up">
           {t("step6SwapHint")}
         </p>
       )}
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div
+        ref={gridRef}
+        className="grid grid-cols-3 gap-2 mb-3"
+        onPointerMove={handleDragMove}
+        onPointerUp={handleDragEnd}
+        onPointerCancel={handleDragEnd}
+      >
         {data.photos.map((url, i) => (
           <div
             key={url}
-            onClick={() => handlePhotoTap(i)}
-            className={`aspect-square rounded-xl bg-bg-2 overflow-hidden relative cursor-pointer transition-all ${
-              selectedIdx === i ? "ring-2 ring-rose scale-95" : selectedIdx !== null ? "opacity-60" : ""
+            data-slot={i}
+            onPointerDown={(e) => handleDragStart(e, i)}
+            className={`aspect-square rounded-xl bg-bg-2 overflow-hidden relative touch-none select-none transition-all cursor-grab active:cursor-grabbing ${
+              dragSource === i
+                ? "opacity-40 scale-90"
+                : dragTarget === i && dragSource !== null
+                ? "ring-2 ring-rose scale-105"
+                : ""
             }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt={t("step6PhotoLabel", { n: i + 1 })} className="w-full h-full object-cover" />
+            <img src={url} alt={t("step6PhotoLabel", { n: i + 1 })} className="w-full h-full object-cover pointer-events-none" />
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); removePhoto(i); setSelectedIdx(null); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); removePhoto(i); }}
               className="absolute top-1.5 right-1.5 w-[20px] h-[20px] rounded-full bg-ink/90 text-bg text-[12px] flex items-center justify-center hover:bg-ink"
               aria-label={t("step6Remove")}
             >
@@ -873,9 +923,9 @@ export default function OnboardingFlow({
   function canProceed(): boolean {
     switch (step) {
       case 1:
-        return data.self_description.trim().length >= 30;
+        return data.self_description.trim().length >= 150;
       case 2:
-        return data.partner_description.trim().length >= 30;
+        return data.partner_description.trim().length >= 150;
       case 3:
         return data.values.length >= 1;
       case 4:
@@ -976,6 +1026,7 @@ export default function OnboardingFlow({
           {tCommon("logout")}
         </button>
       </form>
+
     </MobileShell>
   );
 }

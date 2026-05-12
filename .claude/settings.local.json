@@ -13,7 +13,15 @@
       "Bash(curl -s https://api.openai.com/v1/usage -H \"Authorization: Bearer $\\(grep OPENAI_API_KEY /c/Users/abele/TooMatchProject/too-match/.env.local)",
       "Bash(nslookup -type=TXT toomatch.app 8.8.8.8)",
       "Bash(nslookup -type=TXT _dmarc.toomatch.app 8.8.8.8)",
-      "Bash(npx web-push *)"
+      "Bash(npx web-push *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const sharp = require\\('sharp'\\); console.log\\('sharp ok'\\);\")",
+      "Bash(curl -s \"https://api.resend.com/emails\" -H \"Authorization: Bearer re_bRb4EtdH_JsQJt3vzwByvkAj74RPdhr1B\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); \\(j.data||[]\\).slice\\(0,10\\).forEach\\(e=>console.log\\(e.created_at, e.to, e.subject, e.last_event\\)\\)\")",
+      "Bash(npx vercel *)",
+      "Bash(gh run *)",
+      "WebFetch(domain:policies.tinder.com)",
+      "Bash(npm ls *)"
     ]
   }
 }
