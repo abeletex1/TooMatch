@@ -56,6 +56,11 @@ export default function IntroForm() {
     formData.set("gender", gender!);
     formData.set("seeking", seeking!);
 
+    const eventTag = typeof window !== "undefined"
+      ? (localStorage.getItem("too-match:event") ?? "")
+      : "";
+    if (eventTag) formData.set("event_tag", eventTag);
+
     startTransition(async () => {
       const res = await saveIntroAction(formData);
       if (res?.error) setError(res.error);

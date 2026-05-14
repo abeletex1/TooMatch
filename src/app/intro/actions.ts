@@ -18,12 +18,15 @@ export async function saveIntroAction(formData: FormData): Promise<{ error?: str
   if (!gender) return { error: "Indica tu género." };
   if (!seeking) return { error: "Indica qué buscas." };
 
+  const event_tag = (formData.get("event_tag") as string) || null;
+
   const { error } = await supabase.from("profiles").upsert({
     user_id: user.id,
     display_name,
     age,
     gender,
     seeking,
+    ...(event_tag ? { event_tag } : {}),
   }, { onConflict: "user_id" });
 
   if (error) return { error: error.message };

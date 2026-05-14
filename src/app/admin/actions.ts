@@ -217,7 +217,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
 
   const { data: profiles, error: profilesError } = await admin
     .from("profiles")
-    .select("user_id, display_name, gender, seeking, age, age_min, age_max, values")
+    .select("user_id, display_name, gender, seeking, age, age_min, age_max, values, event_tag")
     .eq("onboarding_completed", true);
 
   if (profilesError) return { matched: 0, skipped: 0, error: profilesError.message };
@@ -264,6 +264,8 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
   }
 
   function genderOk(a: typeof profiles[0], b: typeof profiles[0]) {
+    // Usuarios con event_tag solo se emparejan entre sí (mismo tag o ambos sin tag)
+    if ((a.event_tag ?? null) !== (b.event_tag ?? null)) return false;
     return (a.seeking === "both" || a.seeking === b.gender) &&
            (b.seeking === "both" || b.seeking === a.gender);
   }
