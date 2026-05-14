@@ -223,7 +223,9 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
   if (profilesError) return { matched: 0, skipped: 0, error: profilesError.message };
   if (!profiles || profiles.length < 2) return { matched: 0, skipped: profiles?.length ?? 0 };
 
-  type Profile = (typeof profiles)[number];
+  // Non-null assertion para que TypeScript no se queje dentro de closures
+  const allProfiles = profiles as NonNullable<typeof profiles>;
+  type Profile = (typeof allProfiles)[number];
 
   const { data: activeMatches } = await admin
     .from("matches")
@@ -250,13 +252,13 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
 
   // Equidad: entre los que ya tienen >1 match en el mismo grupo, la diferencia max-min no puede ser >1
   function isFairCandidate(candidateId: string): boolean {
-    const candidate = profiles.find((p) => p.user_id === candidateId);
+    const candidate = allProfiles.find((p) => p.user_id === candidateId);
     if (!candidate) return false;
     const countAfter = getCount(candidateId) + 1;
     if (countAfter <= 1) return true;
 
     const group = groupKey(candidate);
-    const peersAbove1 = profiles
+    const peersAbove1 = allProfiles
       .filter((p) => p.user_id !== candidateId && groupKey(p) === group)
       .map((p) => getCount(p.user_id))
       .filter((c) => c > 1);
@@ -331,7 +333,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
     profile: Profile,
     { strictAge, fairOnly }: { strictAge: boolean; fairOnly: boolean }
   ) {
-    return profiles
+    return allProfiles
       .filter((c) => {
         if (c.user_id === profile.user_id) return false;
         if (!genderOk(profile, c)) return false;
@@ -341,19 +343,17 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
         return true;
       })
       .sort((a, b) => {
-        // Prioridad 1: quien tiene menos matches (equidad)
         const diff = getCount(a.user_id) - getCount(b.user_id);
         if (diff !== 0) return diff;
-        // Prioridad 2: mayor compatibilidad
         return compatScore(profile, b) - compatScore(profile, a);
       });
   }
 
   // Procesar primero a quien tiene menos opciones disponibles (más difícil de emparejar)
-  const unmatched = profiles.filter((p) => getCount(p.user_id) === 0);
+  const unmatched = allProfiles.filter((p) => getCount(p.user_id) === 0);
   const sortedByDifficulty = [...unmatched].sort((a, b) => {
-    const aC = profiles.filter((c) => c.user_id !== a.user_id && genderOk(a, c) && ageOk(a, c)).length;
-    const bC = profiles.filter((c) => c.user_id !== b.user_id && genderOk(b, c) && ageOk(b, c)).length;
+    const aC = allProfiles.filter((c) => c.user_id !== a.user_id && genderOk(a, c) && ageOk(a, c)).length;
+    const bC = allProfiles.filter((c) => c.user_id !== b.user_id && genderOk(b, c) && ageOk(b, c)).length;
     return aC - bC;
   });
 
