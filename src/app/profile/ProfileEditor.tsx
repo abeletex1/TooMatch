@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import ExpandableText from "@/components/ui/ExpandableText";
 import Logo from "@/components/ui/Logo";
 import {
-  QuoteIcon, IDCardIcon, SearchIcon, TagIcon, ImageIcon,
+  QuoteIcon, IDCardIcon, SearchIcon, ImageIcon,
   PinIcon, UserIcon, HeartIcon, CalendarIcon, CompassIcon,
 } from "@/components/ui/icons";
 import { logoutAction } from "@/app/logout/actions";
@@ -16,11 +16,6 @@ import { createClient } from "@/lib/supabase/client";
 
 const GENDER_LABEL: Record<string, string> = { male: "Hombre", female: "Mujer", other: "Otro" };
 const SEEKING_LABEL: Record<string, string> = { male: "Hombres", female: "Mujeres", both: "Hombres y mujeres" };
-const VALUES_OPTIONS = [
-  "Honestidad","Humor","Curiosidad","Empatía","Aventura","Calma",
-  "Ambición","Lealtad","Creatividad","Familia","Cultura","Deporte",
-  "Naturaleza","Espiritualidad",
-];
 
 type Profile = {
   user_id: string;
@@ -38,7 +33,7 @@ type Profile = {
   photos: string[];
 };
 
-type Sheet = "name" | "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "values" | "photo_pick" | null;
+type Sheet = "name" | "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "photo_pick" | null;
 
 /* ─── EditSheet ─────────────────────────────────────────────────────────── */
 
@@ -183,8 +178,6 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
   const [distanceDraft, setDistanceDraft] = useState(profile.distance_km);
   const [seekingDraft, setSeekingDraft] = useState(profile.seeking ?? "");
   const [ageRangeDraft, setAgeRangeDraft] = useState({ min: profile.age_min, max: profile.age_max });
-  const [valuesDraft, setValuesDraft] = useState<string[]>(profile.values ?? []);
-
   function open(sheet: Sheet) {
     // Resetear draft al valor actual al abrir
     if (sheet === "name") setNameDraft(profile.display_name ?? "");
@@ -194,7 +187,6 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
     if (sheet === "distance") setDistanceDraft(profile.distance_km);
     if (sheet === "seeking") setSeekingDraft(profile.seeking ?? "");
     if (sheet === "age_range") setAgeRangeDraft({ min: profile.age_min, max: profile.age_max });
-    if (sheet === "values") setValuesDraft(profile.values ?? []);
     setActiveSheet(sheet);
   }
 
@@ -384,19 +376,6 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           <BasicRow icon={<CalendarIcon />} text={`Edad: ${profile.age_min} – ${profile.age_max} años`} onClick={() => open("age_range")} />
         </Card>
 
-        {/* Valores */}
-        <Card icon={<TagIcon />} title="Mis valores">
-          <button type="button" onClick={() => open("values")} className="w-full text-left">
-            <div className="flex flex-wrap gap-1.5">
-              {(profile.values ?? []).length > 0
-                ? profile.values.map((v) => (
-                    <span key={v} className="px-3 py-1 rounded-full text-[12px] bg-rose-light text-rose-dark border-[0.5px] border-rose-mid font-light">{v}</span>
-                  ))
-                : <span className="text-[13px] text-ink-3 font-light">Toca para elegir valores…</span>}
-            </div>
-          </button>
-        </Card>
-
         {/* Fotos inline */}
         <Card icon={<ImageIcon />} title="Mis fotos">
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
@@ -559,27 +538,6 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
             className="flex-1" style={{ accentColor: "var(--color-rose)" }} />
           <span className="text-[12px] font-medium text-ink w-6 text-right">{ageRangeDraft.max}</span>
         </div>
-      </EditSheet>
-
-      <EditSheet open={activeSheet === "values"} title="Mis valores"
-        onClose={() => setActiveSheet(null)} onSave={() => save({ values: valuesDraft })} saving={saving}>
-        <p className="text-[12px] text-ink-3 font-light -mt-2">Elige hasta 4. Influyen en tus matches.</p>
-        <div className="flex flex-wrap gap-1.5">
-          {VALUES_OPTIONS.map((v) => {
-            const sel = valuesDraft.includes(v);
-            const disabled = !sel && valuesDraft.length >= 4;
-            return (
-              <button key={v} type="button" disabled={disabled}
-                onClick={() => setValuesDraft((prev) => sel ? prev.filter((x) => x !== v) : [...prev, v])}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-light border-[0.5px] transition-colors ${
-                  sel ? "bg-rose-light border-rose text-rose-dark" : "bg-bg border-border-strong text-ink-2 hover:bg-bg-2"
-                } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
-                {v}
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-[11px] text-ink-3 text-right">{valuesDraft.length} / 4</p>
       </EditSheet>
 
       {/* Selector de foto principal */}
