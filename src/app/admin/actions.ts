@@ -223,6 +223,8 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
   if (profilesError) return { matched: 0, skipped: 0, error: profilesError.message };
   if (!profiles || profiles.length < 2) return { matched: 0, skipped: profiles?.length ?? 0 };
 
+  type Profile = (typeof profiles)[number];
+
   const { data: activeMatches } = await admin
     .from("matches")
     .select("user1_id, user2_id")
@@ -244,7 +246,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
   function getCount(id: string) { return matchCount.get(id) ?? 0; }
   function addCount(id: string) { matchCount.set(id, getCount(id) + 1); }
 
-  function groupKey(p: typeof profiles[0]) { return `${p.gender ?? "?"}:${p.seeking ?? "?"}`; }
+  function groupKey(p: Profile) { return `${p.gender ?? "?"}:${p.seeking ?? "?"}`; }
 
   // Equidad: entre los que ya tienen >1 match en el mismo grupo, la diferencia max-min no puede ser >1
   function isFairCandidate(candidateId: string): boolean {
@@ -263,14 +265,14 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
     return countAfter <= Math.min(...peersAbove1) + 1;
   }
 
-  function genderOk(a: typeof profiles[0], b: typeof profiles[0]) {
+  function genderOk(a: Profile, b: Profile) {
     // Usuarios con event_tag solo se emparejan entre sí (mismo tag o ambos sin tag)
     if ((a.event_tag ?? null) !== (b.event_tag ?? null)) return false;
     return (a.seeking === "both" || a.seeking === b.gender) &&
            (b.seeking === "both" || b.seeking === a.gender);
   }
 
-  function ageOk(a: typeof profiles[0], b: typeof profiles[0]) {
+  function ageOk(a: Profile, b: Profile) {
     if (!a.age || !b.age) return true;
     return a.age >= (b.age_min ?? 18) && a.age <= (b.age_max ?? 99) &&
            b.age >= (a.age_min ?? 18) && b.age <= (a.age_max ?? 99);
@@ -293,7 +295,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
     return Math.min(100, Math.round((matches / Math.min(seekWords.size, selfWords.size)) * 100));
   }
 
-  function compatScore(a: typeof profiles[0], b: typeof profiles[0]): number {
+  function compatScore(a: Profile, b: Profile): number {
     // 40% valores compartidos
     const av = a.values ?? [], bv = b.values ?? [];
     const shared = av.filter((v) => bv.includes(v)).length;
@@ -316,7 +318,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
     return existingPairs.has(key) || runPairs.has(key);
   }
 
-  function doMatch(a: typeof profiles[0], b: typeof profiles[0]) {
+  function doMatch(a: Profile, b: Profile) {
     newMatches.push({ user1_id: a.user_id, user2_id: b.user_id, compatibility_score: compatScore(a, b) });
     runPairs.add(pk(a.user_id, b.user_id));
     addCount(a.user_id);
@@ -326,7 +328,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
   // Candidatos válidos para un perfil. strictAge controla si se respeta el rango de edad.
   // fairOnly: si true, solo candidatos que cumplen la regla de equidad.
   function getCandidates(
-    profile: typeof profiles[0],
+    profile: Profile,
     { strictAge, fairOnly }: { strictAge: boolean; fairOnly: boolean }
   ) {
     return profiles
