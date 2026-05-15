@@ -217,7 +217,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
 
   const { data: profiles, error: profilesError } = await admin
     .from("profiles")
-    .select("user_id, display_name, gender, seeking, age, age_min, age_max, values, event_tag")
+    .select("user_id, display_name, gender, seeking, age, age_min, age_max, values, event_tag, self_description, partner_description")
     .eq("onboarding_completed", true);
 
   if (profilesError) return { matched: 0, skipped: 0, error: profilesError.message };
@@ -299,7 +299,7 @@ export async function autoMatchAction(): Promise<{ matched: number; skipped: num
 
   function compatScore(a: Profile, b: Profile): number {
     // 40% valores compartidos
-    const av = a.values ?? [], bv = b.values ?? [];
+    const av: string[] = a.values ?? [], bv: string[] = b.values ?? [];
     const shared = av.filter((v) => bv.includes(v)).length;
     const union = new Set([...av, ...bv]).size;
     const valuesScore = union > 0 ? (shared / union) * 100 : 50;
