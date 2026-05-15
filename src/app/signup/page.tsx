@@ -36,7 +36,7 @@ export default function SignupPage() {
             <span>{t("googleContinue")}</span>
           </a>
           <p className="text-[11px] text-ink-3 font-light text-center mt-2">
-            No aceptamos email corporativo con Google.
+            No aceptamos email corporativo.
           </p>
         </div>
 
