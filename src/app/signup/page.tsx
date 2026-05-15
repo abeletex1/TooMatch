@@ -55,6 +55,9 @@ export default function SignupPage() {
               required
               autoComplete="email"
             />
+            <p className="text-[11px] text-ink-3 font-light mt-1.5">
+              Usa tu <span className="text-ink-2">email personal</span>, no el del trabajo.
+            </p>
           </div>
           <div>
             <FormLabel htmlFor="signup-password">{t("passwordLabel")}</FormLabel>
