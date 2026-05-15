@@ -11,7 +11,7 @@ import { saveIntroAction } from "./actions";
 
 // ── Evento Factorial ────────────────────────────────────────────────────────
 // Cambia esta fecha para ocultar la pregunta automáticamente tras el evento.
-const FACTORIAL_EVENT_END = new Date("2026-05-22T23:59:59");
+const FACTORIAL_EVENT_END = new Date("2026-05-24T23:59:59");
 const SHOW_FACTORIAL_QUESTION = new Date() <= FACTORIAL_EVENT_END;
 // ────────────────────────────────────────────────────────────────────────────
 
