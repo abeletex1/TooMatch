@@ -9,6 +9,12 @@ import Input, { FormLabel } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { saveIntroAction } from "./actions";
 
+// ── Evento Factorial ────────────────────────────────────────────────────────
+// Cambia esta fecha para ocultar la pregunta automáticamente tras el evento.
+const FACTORIAL_EVENT_END = new Date("2026-05-22T23:59:59");
+const SHOW_FACTORIAL_QUESTION = new Date() <= FACTORIAL_EVENT_END;
+// ────────────────────────────────────────────────────────────────────────────
+
 function PrefBig({
   selected,
   onClick,
@@ -38,6 +44,7 @@ export default function IntroForm() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [seeking, setSeeking] = useState<"male" | "female" | "both" | null>(null);
+  const [isFactorial, setIsFactorial] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -45,7 +52,9 @@ export default function IntroForm() {
   const tCommon = useTranslations("common");
 
   function canSubmit() {
-    return name.trim().length > 0 && Number(age) >= 18 && gender !== null && seeking !== null;
+    const baseOk = name.trim().length > 0 && Number(age) >= 18 && gender !== null && seeking !== null;
+    if (SHOW_FACTORIAL_QUESTION) return baseOk && isFactorial !== null;
+    return baseOk;
   }
 
   function handleSubmit() {
@@ -55,11 +64,7 @@ export default function IntroForm() {
     formData.set("age", age);
     formData.set("gender", gender!);
     formData.set("seeking", seeking!);
-
-    const eventTag = typeof window !== "undefined"
-      ? (localStorage.getItem("too-match:event") ?? "")
-      : "";
-    if (eventTag) formData.set("event_tag", eventTag);
+    if (SHOW_FACTORIAL_QUESTION && isFactorial) formData.set("event_tag", "factorial");
 
     startTransition(async () => {
       const res = await saveIntroAction(formData);
@@ -135,6 +140,21 @@ export default function IntroForm() {
               </PrefBig>
             </div>
           </div>
+
+          {/* Pregunta Factorial — visible solo hasta el 22 de mayo */}
+          {SHOW_FACTORIAL_QUESTION && (
+            <div>
+              <FormLabel>¿Formas parte del equipo de Factorial?</FormLabel>
+              <div className="grid grid-cols-2 gap-2.5 mt-1">
+                <PrefBig selected={isFactorial === true} onClick={() => setIsFactorial(true)}>
+                  Sí
+                </PrefBig>
+                <PrefBig selected={isFactorial === false} onClick={() => setIsFactorial(false)}>
+                  No
+                </PrefBig>
+              </div>
+            </div>
+          )}
 
           {error && (
             <p className="text-[12px] text-rose-dark font-light">{error}</p>
