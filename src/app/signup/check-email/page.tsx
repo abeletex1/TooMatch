@@ -1,11 +1,8 @@
 import Link from "next/link";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
+import ResendButton from "./ResendButton";
 
-/**
- * Pantalla "Revisa tu correo". Aparece después de un signup exitoso para
- * indicarle al usuario que tiene que confirmar el email antes de poder entrar.
- */
 export default async function CheckEmailPage({
   searchParams,
 }: {
@@ -50,9 +47,10 @@ export default async function CheckEmailPage({
         </p>
 
         <p className="text-[11px] text-ink-3 font-light mt-6 max-w-[280px]">
-          ¿No lo ves? Mira en spam o promociones. El enlace caduca pasadas
-          unas horas.
+          ¿No lo ves? Mira en spam o promociones.
         </p>
+
+        {email && <ResendButton email={email} />}
 
         <p className="text-[12px] text-ink-3 font-light mt-10">
           ¿Te equivocaste?{" "}
