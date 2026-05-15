@@ -171,7 +171,7 @@ function FactorialWaiting() {
       <div className="w-9 h-[1.5px] bg-rose-mid rounded-sm my-6" />
 
       <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[280px]">
-        El domingo 18 de mayo recibirás tu match entre los compañeros que participan en el evento.
+        El jueves 22 de mayo recibirás tu match entre los compañeros que participan en el evento.
       </p>
     </main>
   );
