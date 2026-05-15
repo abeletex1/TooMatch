@@ -21,7 +21,12 @@
       "Bash(npx vercel *)",
       "Bash(gh run *)",
       "WebFetch(domain:policies.tinder.com)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(git commit -m 'Fix TypeScript error: use Profile type alias instead of typeof profiles[0] *)",
+      "Bash(git commit -m 'Fix TypeScript null errors in autoMatchAction closures *)",
+      "Bash(git commit -m 'Fix remaining TypeScript errors: add types and missing select fields *)",
+      "Bash(git commit -m 'Move Factorial question to IntroForm with auto-hide after May 22 *)",
+      "Bash(git commit -m 'Update Factorial event end date to May 24 *)"
     ]
   }
 }

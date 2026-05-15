@@ -48,7 +48,7 @@ export async function signupAction(
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/welcome`,
+      emailRedirectTo: `${origin}/auth/confirm?next=/welcome`,
     },
   });
 
