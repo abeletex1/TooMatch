@@ -17,9 +17,11 @@ import type { RealMatch } from "@/lib/types";
 export default function MatchPageClient({
   matches,
   dayNumber,
+  factorialWaiting = false,
 }: {
   matches: RealMatch[];
   dayNumber: number;
+  factorialWaiting?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -34,6 +36,16 @@ export default function MatchPageClient({
   }, [total]);
 
   const topbarRight = total > 1 ? `${currentIdx + 1} / ${total}` : `Día ${dayNumber}`;
+
+  if (factorialWaiting) {
+    return (
+      <MobileShell>
+        <Topbar right="Facts 2025" />
+        <FactorialWaiting />
+        <BottomNav />
+      </MobileShell>
+    );
+  }
 
   if (total === 0) {
     return (
@@ -134,6 +146,33 @@ function MatchHero({
           {t("moreMatches")}
         </p>
       )}
+    </main>
+  );
+}
+
+/* ===== Factorial waiting state ============================================ */
+
+function FactorialWaiting() {
+  return (
+    <main className="flex-1 flex flex-col items-center justify-center px-7 pb-3 text-center animate-fade-up">
+      <div className="w-16 h-16 rounded-2xl bg-rose-light flex items-center justify-center mb-6">
+        <InfinitySymbol size={36} strokeWidth={2.5} />
+      </div>
+
+      <p className="text-[10px] uppercase tracking-[0.12em] text-rose font-medium mb-3">
+        Facts 2025 · Edición especial
+      </p>
+
+      <h2 className="font-serif text-[26px] text-ink font-medium leading-[1.2]">
+        Tu match llega el{" "}
+        <em className="italic text-rose">día del Facts</em>
+      </h2>
+
+      <div className="w-9 h-[1.5px] bg-rose-mid rounded-sm my-6" />
+
+      <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[280px]">
+        El domingo 18 de mayo recibirás tu match entre los compañeros que participan en el evento.
+      </p>
     </main>
   );
 }

@@ -12,18 +12,24 @@ export default async function MatchPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed, day_number")
+    .select("onboarding_completed, day_number, event_tag")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (!profile?.onboarding_completed) redirect("/welcome");
 
-  const matches = await getAllActiveMatches(user.id);
+  // Usuarios de Factorial ven pantalla de espera hasta el día del evento
+  const FACTS_DAY = new Date("2025-05-18T00:00:00");
+  const isFactorialWaiting =
+    profile.event_tag === "factorial" && new Date() < FACTS_DAY;
+
+  const matches = isFactorialWaiting ? [] : await getAllActiveMatches(user.id);
 
   return (
     <MatchPageClient
       matches={matches}
       dayNumber={profile.day_number || 1}
+      factorialWaiting={isFactorialWaiting}
     />
   );
 }
