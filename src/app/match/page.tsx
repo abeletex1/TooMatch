@@ -19,7 +19,7 @@ export default async function MatchPage() {
   if (!profile?.onboarding_completed) redirect("/welcome");
 
   // Usuarios de Factorial ven pantalla de espera hasta el día del evento
-  const FACTS_DAY = new Date("2025-05-22T00:00:00");
+  const FACTS_DAY = new Date("2026-05-22T00:00:00");
   const isFactorialWaiting =
     profile.event_tag === "factorial" && new Date() < FACTS_DAY;
 
