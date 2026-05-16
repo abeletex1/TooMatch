@@ -1,50 +1,49 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Too Match · Facts 2026</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+    @page { size: A5 portrait; margin: 0; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background: #FAF7F2;
       font-family: 'Inter', sans-serif;
+      width: 148mm;
+      min-height: 210mm;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 40px;
+      padding: 12mm;
     }
 
     .card {
-      background: #FAF7F2;
-      border: 1px solid #E8E0D4;
-      border-radius: 32px;
-      padding: 48px 52px;
-      text-align: center;
-      max-width: 440px;
       width: 100%;
+      text-align: center;
     }
 
     .badge {
-      display: inline-block;
-      font-size: 10px;
+      font-size: 8pt;
       font-weight: 500;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: #C4735A;
-      margin-bottom: 12px;
+      display: block;
+      margin-bottom: 8pt;
     }
 
     h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 34px;
+      font-size: 28pt;
       font-weight: 500;
       color: #1E1B17;
-      line-height: 1.2;
-      margin-bottom: 28px;
+      line-height: 1.15;
+      margin-bottom: 14pt;
     }
 
     h1 em {
@@ -52,36 +51,34 @@
       color: #C4735A;
     }
 
-    /* QR + logo en la misma fila */
+    /* QR + logo fila */
     .qr-row {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
-      gap: 18px;
-      margin-bottom: 18px;
+      gap: 14pt;
+      margin-bottom: 10pt;
     }
 
     .qr-wrapper {
       background: #fff;
-      border-radius: 20px;
-      padding: 14px;
-      border: 1px solid #E8E0D4;
+      border-radius: 12pt;
+      padding: 8pt;
+      border: 1pt solid #E8E0D4;
       flex-shrink: 0;
     }
 
     .qr-wrapper img {
       display: block;
-      width: 190px;
-      height: 190px;
+      width: 70mm;
+      height: 70mm;
     }
 
-    /* Logo vertical a la derecha del QR */
     .logo-side {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
-      padding-bottom: 6px;
+      gap: 2pt;
     }
 
     .logo-mark {
@@ -91,68 +88,67 @@
 
     .logo-t {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 32px;
+      font-size: 26pt;
       font-weight: 500;
       color: #1E1B17;
       line-height: 1;
     }
 
     .logo-match {
-      font-family: 'Inter', sans-serif;
-      font-size: 10px;
+      font-size: 7pt;
       font-weight: 500;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.2em;
       color: #1E1B17;
       text-transform: uppercase;
+      display: block;
     }
 
     .url {
-      font-size: 13px;
-      font-weight: 400;
+      font-size: 10pt;
       color: #1E1B17;
-      margin-bottom: 24px;
+      margin-bottom: 12pt;
     }
 
     .divider {
-      width: 36px;
-      height: 1.5px;
+      width: 28pt;
+      height: 1pt;
       background: #E8B4A0;
-      border-radius: 2px;
-      margin: 0 auto 20px;
+      border-radius: 1pt;
+      margin: 0 auto 12pt;
     }
 
     .steps {
       text-align: left;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 28px;
+      gap: 7pt;
+      margin-bottom: 16pt;
     }
 
     .step {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 8pt;
     }
 
     .step-num {
-      width: 22px;
-      height: 22px;
+      width: 16pt;
+      height: 16pt;
       border-radius: 50%;
       background: #F5E8E3;
-      border: 1px solid #E8B4A0;
+      border: 0.5pt solid #E8B4A0;
       color: #8C4A35;
-      font-size: 11px;
+      font-size: 8pt;
       font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 1pt;
     }
 
     .step-text {
-      font-size: 12px;
+      font-size: 9pt;
       font-weight: 300;
       color: #6B6258;
       line-height: 1.5;
@@ -164,15 +160,10 @@
     }
 
     .footer {
-      font-size: 10px;
+      font-size: 7pt;
       font-weight: 300;
       color: #A8A099;
       letter-spacing: 0.04em;
-    }
-
-    @media print {
-      body { background: #FAF7F2; padding: 20px; }
-      .card { border: 1px solid #E8E0D4; }
     }
   </style>
 </head>
@@ -183,18 +174,20 @@
 
     <h1>Find your <em>Match</em><br/>at Facts</h1>
 
-    <!-- QR + Logo lado a lado -->
     <div class="qr-row">
       <div class="qr-wrapper">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&color=1E1B17&bgcolor=ffffff&data=https://toomatch.app&margin=0" alt="QR toomatch.app" />
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=600x600&color=1E1B17&bgcolor=ffffff&data=https://toomatch.app&margin=0"
+          alt="QR toomatch.app"
+        />
       </div>
 
       <div class="logo-side">
         <div class="logo-mark">
           <span class="logo-t">T</span>
-          <svg width="26" height="17" viewBox="0 0 40 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 13C20 13 15.5 5 10 5C5.8 5 2 8.1 2 13C2 17.9 5.8 21 10 21C15.5 21 20 13 20 13Z" stroke="#6B8C7E" stroke-width="2.2" fill="none"/>
-            <path d="M20 13C20 13 24.5 21 30 21C34.2 21 38 17.9 38 13C38 8.1 34.2 5 30 5C24.5 5 20 13 20 13Z" stroke="#6B8C7E" stroke-width="2.2" fill="none"/>
+          <svg width="22" height="14" viewBox="0 0 40 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 13C20 13 15.5 5 10 5C5.8 5 2 8.1 2 13C2 17.9 5.8 21 10 21C15.5 21 20 13 20 13Z" stroke="#6B8C7E" stroke-width="2.4" fill="none"/>
+            <path d="M20 13C20 13 24.5 21 30 21C34.2 21 38 17.9 38 13C38 8.1 34.2 5 30 5C24.5 5 20 13 20 13Z" stroke="#6B8C7E" stroke-width="2.4" fill="none"/>
           </svg>
         </div>
         <span class="logo-match">Match</span>
