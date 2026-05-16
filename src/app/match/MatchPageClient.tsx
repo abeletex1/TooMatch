@@ -160,7 +160,7 @@ function FactorialWaiting() {
       </div>
 
       <p className="text-[10px] uppercase tracking-[0.12em] text-rose font-medium mb-3">
-        Facts 2025 · Edición especial
+        Facts 2026 · Edición especial
       </p>
 
       <h2 className="font-serif text-[26px] text-ink font-medium leading-[1.2]">
@@ -170,9 +170,13 @@ function FactorialWaiting() {
 
       <div className="w-9 h-[1.5px] bg-rose-mid rounded-sm my-6" />
 
-      <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[280px]">
+      <p className="text-[14px] text-ink-2 font-light leading-[1.7] max-w-[280px] mb-8">
         El viernes 22 de mayo recibirás tu match entre los compañeros que participan en el evento.
       </p>
+
+      <Link href="/question" className={buttonClasses("rose", true)}>
+        Contesta la pregunta del día →
+      </Link>
     </main>
   );
 }
