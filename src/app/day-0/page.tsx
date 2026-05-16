@@ -12,13 +12,14 @@ export default async function Day0Page() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed, relationship_intent")
+    .select("onboarding_completed, relationship_intent, event_tag")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (!profile?.onboarding_completed) redirect("/welcome");
 
   const nextHref = profile?.relationship_intent ? "/match" : "/onboarding-question";
+  const isFactorial = profile?.event_tag === "factorial";
 
-  return <Day0Client nextHref={nextHref} />;
+  return <Day0Client nextHref={nextHref} isFactorial={isFactorial} />;
 }
