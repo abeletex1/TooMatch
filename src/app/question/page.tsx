@@ -21,7 +21,13 @@ export default async function QuestionPage() {
 
   const t = await getTranslations("question");
 
-  const today = new Date().toISOString().split("T")[0];
+  // Hora en España (UTC+2 en verano). La pregunta del día se desbloquea a las 8:30.
+  const nowMadrid = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+  const isBeforeUnlock = nowMadrid.getHours() < 8 || (nowMadrid.getHours() === 8 && nowMadrid.getMinutes() < 30);
+  const effectiveDate = isBeforeUnlock
+    ? new Date(nowMadrid.getTime() - 86400000).toISOString().split("T")[0]  // ayer
+    : nowMadrid.toISOString().split("T")[0];
+  const today = effectiveDate;
   const signupDate = user.created_at.split("T")[0];
 
   const { data: answers } = await supabase
