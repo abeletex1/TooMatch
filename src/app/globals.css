@@ -47,6 +47,13 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* iOS auto-zoom fix: iOS Safari zooms in when input font-size < 16px.
+   Forcing 16px prevents that. Visual size is controlled by Tailwind classes,
+   but the base font-size must be >= 16px for iOS to not zoom. */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
 /* The phone-shell only constrains width on larger screens. On mobile it
    takes the full viewport, like a native app. */
 /* El shell ocupa exactamente el viewport visual — el scroll ocurre dentro,
