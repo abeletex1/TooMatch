@@ -257,11 +257,29 @@ export async function sendWelcomeEmail(userEmail: string, locale: string = "es")
 export async function sendMatchEmail(userId: string): Promise<void> {
   const email = await getUserEmail(userId);
   if (!email) return;
-  await sendEmail(email, {
+
+  // Leer idioma del perfil
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("locale")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const isEn = (profile?.locale ?? "es") === "en";
+
+  await sendEmail(email, isEn ? {
+    subject: "✦ You have a new match on Too Match",
+    html: emailTemplate(
+      "You have a new match.",
+      "Someone compatible with you is waiting. Open the app, say hello and find out who they are.",
+      "Discover my match →",
+      "/match"
+    ),
+  } : {
     subject: "✦ Tienes un nuevo match en Too Match",
     html: emailTemplate(
       "Tienes un nuevo match.",
-      "Alguien compatible contigo está esperando. Entra para descubrir quién es.",
+      "Alguien compatible contigo está esperando. Entra, escríbele y descubre quién es.",
       "Ver mi match →",
       "/match"
     ),

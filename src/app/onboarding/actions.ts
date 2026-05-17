@@ -78,6 +78,10 @@ export async function saveProfileAction(
 
   const headersList = await headers();
   const locale = headersList.get("x-next-intl-locale") ?? "es";
+
+  // Guardar locale en perfil para emails futuros
+  await supabase.from("profiles").update({ locale }).eq("user_id", user.id);
+
   if (user.email) await sendWelcomeEmail(user.email, locale);
 
   redirect("/day-0");
