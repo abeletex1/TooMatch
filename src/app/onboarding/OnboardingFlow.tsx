@@ -124,7 +124,7 @@ function StepHeader({
   step: number;
   title: string;
   titleEm?: string;
-  subtitle: string;
+  subtitle?: string;
 }) {
   const t = useTranslations("onboarding");
   return (
@@ -138,9 +138,11 @@ function StepHeader({
           <em className="italic text-rose">{titleEm}</em>
         ) : null}
       </h2>
-      <p className="text-[13px] text-ink-2 font-light leading-[1.65]">
-        {subtitle}
-      </p>
+      {subtitle && (
+        <p className="text-[13px] text-ink-2 font-light leading-[1.65]">
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
@@ -525,6 +527,20 @@ function Step4({
   );
 }
 
+/* ===== Nationalidades ===================================================== */
+
+const NATIONALITIES = [
+  "Alemana", "Argelina", "Argentina", "Australiana", "Austriaca", "Belga",
+  "Boliviana", "Brasileña", "Británica", "Canadiense", "Chilena", "China",
+  "Colombiana", "Coreana", "Cubana", "Danesa", "Dominicana", "Ecuatoriana",
+  "Egipcia", "Española", "Estadounidense", "Filipina", "Finlandesa", "Francesa",
+  "Griega", "Guatemalteca", "Holandesa", "Hondureña", "Húngara", "India",
+  "Iraní", "Irlandesa", "Israelí", "Italiana", "Japonesa", "Marroquí",
+  "Mexicana", "Neozelandesa", "Nigeriana", "Noruega", "Panameña", "Paraguaya",
+  "Peruana", "Polaca", "Portuguesa", "Rumana", "Rusa", "Salvadoreña",
+  "Sueca", "Suiza", "Turca", "Ucraniana", "Uruguaya", "Venezolana", "Otra",
+];
+
 /* ===== Step 5: Ubicación ================================================= */
 
 function Step5({
@@ -535,8 +551,13 @@ function Step5({
   update: (patch: Partial<Data>) => void;
 }) {
   const t = useTranslations("onboarding");
+  const [nationalitySearch, setNationalitySearch] = useState("");
   const [provinceSearch, setProvinceSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
+
+  const filteredNationalities = nationalitySearch.trim()
+    ? NATIONALITIES.filter((n) => n.toLowerCase().includes(nationalitySearch.toLowerCase()))
+    : NATIONALITIES;
 
   const filteredProvinces = provinceSearch.trim()
     ? PROVINCES.filter((p) => p.toLowerCase().includes(provinceSearch.toLowerCase()))
@@ -559,17 +580,49 @@ function Step5({
         step={5}
         title={t("step5Title1")}
         titleEm={t("step5Title2")}
-        subtitle={t("step5Subtitle")}
       />
 
+      {/* Nacionalidad */}
       <p className="text-[12px] text-ink-2 mb-2">{t("step5Nationality")}</p>
-      <input
-        type="text"
-        placeholder={t("step5NationalityPlaceholder")}
-        value={data.nationality}
-        onChange={(e) => update({ nationality: e.target.value })}
-        className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-4"
-      />
+      {data.nationality ? (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-[12px] bg-rose-light border-[0.5px] border-rose-mid text-rose-dark px-3 py-1 rounded-full font-light">
+            {data.nationality}
+          </span>
+          <button
+            type="button"
+            onClick={() => update({ nationality: "" })}
+            className="text-[11px] text-ink-3 hover:text-rose-dark"
+          >
+            {t("step5Change")}
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            type="text"
+            placeholder={t("step5NationalityPlaceholder")}
+            value={nationalitySearch}
+            onChange={(e) => setNationalitySearch(e.target.value)}
+            className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-1.5"
+          />
+          <div className="max-h-[160px] overflow-y-auto flex flex-col rounded-xl border-[0.5px] border-border bg-bg mb-4">
+            {filteredNationalities.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => { update({ nationality: n }); setNationalitySearch(""); }}
+                className="text-left px-3.5 py-2 text-[13px] font-light text-ink-2 hover:bg-bg-2 transition-colors"
+              >
+                {n}
+              </button>
+            ))}
+            {filteredNationalities.length === 0 && (
+              <p className="text-[12px] text-ink-3 px-3.5 py-3 font-light">{t("step5NoResults")}</p>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="border-t border-border mt-2 mb-4" />
       <p className="text-[13px] font-medium text-ink mb-0.5">{t("step5LocationLabel")}</p>

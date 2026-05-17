@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
+import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 
 export default function ExpandableText({
@@ -17,6 +18,12 @@ export default function ExpandableText({
   const [open, setOpen] = useState(false);
   const [shellEl, setShellEl] = useState<Element | null>(null);
   const isLong = text.length > 100;
+  const pathname = usePathname();
+
+  // Colapsar al cambiar de página
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const [draft, setDraft] = useState(text);
   const [saving, startSaving] = useTransition();
@@ -150,14 +157,18 @@ export default function ExpandableText({
   if (editable) {
     return (
       <>
-        <button
-          onClick={() => setOpen(true)}
-          className="w-full text-left"
-        >
+        <button onClick={() => setOpen(true)} className="w-full text-left">
           {text ? (
-            <p className={`text-[14px] text-ink leading-[1.6] font-light whitespace-pre-line break-words ${isLong ? "line-clamp-3" : ""}`}>
-              {text}
-            </p>
+            <>
+              <p className={`text-[14px] text-ink leading-[1.6] font-light whitespace-pre-line break-words ${isLong ? "line-clamp-3" : ""}`}>
+                {text}
+              </p>
+              {isLong && (
+                <span className="text-[12px] text-rose font-light mt-1 block">
+                  Ver más →
+                </span>
+              )}
+            </>
           ) : (
             <p className="text-[13px] text-ink-3 font-light">
               Toca para añadir descripción…

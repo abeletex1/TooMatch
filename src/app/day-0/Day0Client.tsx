@@ -99,14 +99,6 @@ export default function Day0Client({ nextHref, isFactorial = false }: { nextHref
           </Link>
         )}
 
-        <form action={logoutAction} className="mt-4">
-          <button
-            type="submit"
-            className="text-[11px] text-ink-3 font-light hover:text-rose-dark hover:underline underline-offset-2"
-          >
-            {tCommon("logout")}
-          </button>
-        </form>
       </main>
     </MobileShell>
   );

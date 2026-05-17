@@ -17,6 +17,15 @@ import { createClient } from "@/lib/supabase/client";
 const GENDER_LABEL: Record<string, string> = { male: "Hombre", female: "Mujer", other: "Otro" };
 const SEEKING_LABEL: Record<string, string> = { male: "Hombres", female: "Mujeres", both: "Hombres y mujeres" };
 
+const VALUES_KEYS = [
+  "valuesHonesty", "valuesHumor", "valuesCuriosity", "valuesEmpathy", "valuesLoyalty",
+  "valuesAmbition", "valuesCalm", "valuesCreativity", "valuesIndependence", "valuesGenerosity",
+  "valuesAdventure", "valuesNature", "valuesSport", "valuesTravel", "valuesNightlife",
+  "valuesQuiet", "valuesFamily", "valuesPets", "valuesFood",
+  "valuesProgressive", "valuesConservative", "valuesIndividualFreedom", "valuesSocialJustice",
+  "valuesFeminism", "valuesSpirituality", "valuesScience", "valuesTradition", "valuesSustainability",
+] as const;
+
 type Profile = {
   user_id: string;
   display_name: string | null;
@@ -33,7 +42,7 @@ type Profile = {
   photos: string[];
 };
 
-type Sheet = "name" | "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "photo_pick" | null;
+type Sheet = "name" | "age" | "city" | "gender" | "distance" | "seeking" | "age_range" | "photo_pick" | "values" | null;
 
 /* ─── EditSheet ─────────────────────────────────────────────────────────── */
 
@@ -166,6 +175,7 @@ function PrefBtn({ selected, onClick, children }: { selected: boolean; onClick: 
 
 export default function ProfileEditor({ initial, userEmail }: { initial: Profile; userEmail: string }) {
   const tCommon = useTranslations("common");
+  const tOnboarding = useTranslations("onboarding");
   const [profile, setProfile] = useState(initial);
   const [activeSheet, setActiveSheet] = useState<Sheet>(null);
   const [saving, startSaving] = useTransition();
@@ -178,6 +188,8 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
   const [distanceDraft, setDistanceDraft] = useState(profile.distance_km);
   const [seekingDraft, setSeekingDraft] = useState(profile.seeking ?? "");
   const [ageRangeDraft, setAgeRangeDraft] = useState({ min: profile.age_min, max: profile.age_max });
+  const [valuesDraft, setValuesDraft] = useState<string[]>(profile.values ?? []);
+
   function open(sheet: Sheet) {
     // Resetear draft al valor actual al abrir
     if (sheet === "name") setNameDraft(profile.display_name ?? "");
@@ -187,6 +199,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
     if (sheet === "distance") setDistanceDraft(profile.distance_km);
     if (sheet === "seeking") setSeekingDraft(profile.seeking ?? "");
     if (sheet === "age_range") setAgeRangeDraft({ min: profile.age_min, max: profile.age_max });
+    if (sheet === "values") setValuesDraft(profile.values ?? []);
     setActiveSheet(sheet);
   }
 
@@ -377,20 +390,27 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
         </Card>
 
         {/* Mis valores */}
-        {profile.values && profile.values.length > 0 && (
-          <Card icon={<HeartIcon />} title="Mis valores">
-            <div className="flex flex-wrap gap-1.5">
-              {profile.values.map((v) => (
-                <span
-                  key={v}
-                  className="text-[11px] font-light px-2.5 py-1 rounded-full bg-rose-light border-[0.5px] border-rose-mid text-rose-dark"
-                >
-                  {v}
-                </span>
-              ))}
-            </div>
-          </Card>
-        )}
+        <Card icon={<HeartIcon />} title="Mis valores">
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {(profile.values ?? []).length > 0 ? profile.values.map((v) => (
+              <span
+                key={v}
+                className="text-[11px] font-light px-2.5 py-1 rounded-full bg-rose-light border-[0.5px] border-rose-mid text-rose-dark"
+              >
+                {tOnboarding(v as Parameters<typeof tOnboarding>[0])}
+              </span>
+            )) : (
+              <p className="text-[13px] text-ink-3 font-light">Sin valores añadidos.</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => open("values")}
+            className="text-[12px] text-rose-dark font-light hover:opacity-70 transition-opacity"
+          >
+            Editar valores →
+          </button>
+        </Card>
 
         {/* Fotos inline */}
         <Card icon={<ImageIcon />} title="Mis fotos">
@@ -555,6 +575,57 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           <span className="text-[12px] font-medium text-ink w-6 text-right">{ageRangeDraft.max}</span>
         </div>
       </EditSheet>
+
+      {/* Editar valores */}
+      {activeSheet === "values" && (() => {
+        const MAX = 5;
+        const shellEl = typeof document !== "undefined" ? document.querySelector(".shell") : null;
+        if (!shellEl) return null;
+        return createPortal(
+          <div className="absolute inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(30,27,23,0.55)" }} onClick={() => setActiveSheet(null)}>
+            <div className="bg-bg rounded-t-[24px] px-5 pt-4 pb-10 max-h-[80vh] overflow-y-auto flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="w-9 h-[3px] bg-bg-3 rounded-full mx-auto mb-5" />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-serif text-[18px] text-ink font-medium">Mis valores</h3>
+                <button onClick={() => setActiveSheet(null)} className="text-ink-3 text-[22px] leading-none">×</button>
+              </div>
+              <p className="text-[12px] text-ink-3 font-light mb-3">Elige hasta {MAX}.</p>
+              <div className="flex flex-wrap gap-1.5 mb-5">
+                {VALUES_KEYS.map((key) => {
+                  const sel = valuesDraft.includes(key);
+                  const disabled = !sel && valuesDraft.length >= MAX;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setValuesDraft(sel ? valuesDraft.filter((v) => v !== key) : [...valuesDraft, key])}
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-light border-[0.5px] transition-colors ${
+                        sel ? "bg-rose-light border-rose text-rose-dark" : "bg-bg border-border-strong text-ink-2 hover:bg-bg-2"
+                      } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      {tOnboarding(key)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2.5">
+                <button onClick={() => setActiveSheet(null)} className="flex-1 px-4 py-2.5 rounded-xl border-[0.5px] border-border-strong text-[13px] text-ink-2 font-light">
+                  {tCommon("cancel")}
+                </button>
+                <button
+                  onClick={() => save({ values: valuesDraft })}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-ink text-bg text-[13px] disabled:opacity-50"
+                >
+                  {saving ? tCommon("saving") : tCommon("save")}
+                </button>
+              </div>
+            </div>
+          </div>,
+          shellEl
+        );
+      })()}
 
       {/* Selector de foto principal */}
       <PhotoPickSheet
