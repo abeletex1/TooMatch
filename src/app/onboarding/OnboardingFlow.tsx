@@ -571,6 +571,10 @@ function Step5({
         className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-4"
       />
 
+      <div className="border-t border-border mt-2 mb-4" />
+      <p className="text-[13px] font-medium text-ink mb-0.5">{t("step5LocationLabel")}</p>
+      <p className="text-[12px] text-ink-3 font-light mb-3">{t("step5LocationHint")}</p>
+
       <p className="text-[12px] text-ink-2 mb-2">{t("step5Province")}</p>
       {data.province ? (
         <div className="flex items-center gap-2 mb-3">

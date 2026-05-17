@@ -163,6 +163,8 @@
     "step5Subtitle": "Your province and city. This helps us find matches near you.",
     "step5Nationality": "Nationality",
     "step5NationalityPlaceholder": "Spanish, Italian, French…",
+    "step5LocationLabel": "Where do you live now?",
+    "step5LocationHint": "The province and city where you currently live.",
     "step5Province": "Province",
     "step5SearchProvince": "Search province…",
     "step5NoResults": "No results.",
