@@ -4,21 +4,10 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 function resetZoom() {
-  // iOS Safari ignores user-scalable=no since iOS 10.
-  // The only reliable way to reset manual pinch-zoom is to temporarily
-  // swap the viewport meta tag content, forcing a layout recalculation.
   const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
   if (!meta) return;
-
   const original = meta.getAttribute("content") ?? "width=device-width, initial-scale=1";
-
-  // Step 1: set initial-scale=1 explicitly to snap zoom back to 1x
-  meta.setAttribute(
-    "content",
-    "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1"
-  );
-
-  // Step 2: restore original after two animation frames so the reset sticks
+  meta.setAttribute("content", "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1");
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       meta.setAttribute("content", original);
@@ -29,7 +18,31 @@ function resetZoom() {
 export default function ZoomReset() {
   const pathname = usePathname();
 
-  // Reset on every route change
+  // Prevenir pinch-zoom desde el principio (la mejor solución en iOS)
+  useEffect(() => {
+    const preventPinch = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    // gesturestart/gesturechange son eventos propietarios de iOS Safari
+    const preventGesture = (e: Event) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener("touchmove", preventPinch, { passive: false });
+    document.addEventListener("gesturestart", preventGesture, { passive: false });
+    document.addEventListener("gesturechange", preventGesture, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", preventPinch);
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
+    };
+  }, []);
+
+  // Resetear zoom al cambiar de ruta (por si acaso ya está ampliado)
   useEffect(() => {
     resetZoom();
   }, [pathname]);
