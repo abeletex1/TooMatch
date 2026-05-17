@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { sendWelcomeEmail } from "@/lib/email";
 
@@ -75,7 +76,9 @@ export async function saveProfileAction(
 
   if (error) return { error: `No se pudo guardar el perfil: ${error.message}` };
 
-  if (user.email) await sendWelcomeEmail(user.email);
+  const headersList = await headers();
+  const locale = headersList.get("x-next-intl-locale") ?? "es";
+  if (user.email) await sendWelcomeEmail(user.email, locale);
 
   redirect("/day-0");
 }
