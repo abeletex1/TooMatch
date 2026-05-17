@@ -376,6 +376,22 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           <BasicRow icon={<CalendarIcon />} text={`Edad: ${profile.age_min} – ${profile.age_max} años`} onClick={() => open("age_range")} />
         </Card>
 
+        {/* Mis valores */}
+        {profile.values && profile.values.length > 0 && (
+          <Card icon={<HeartIcon />} title="Mis valores">
+            <div className="flex flex-wrap gap-1.5">
+              {profile.values.map((v) => (
+                <span
+                  key={v}
+                  className="text-[11px] font-light px-2.5 py-1 rounded-full bg-rose-light border-[0.5px] border-rose-mid text-rose-dark"
+                >
+                  {v}
+                </span>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Fotos inline */}
         <Card icon={<ImageIcon />} title="Mis fotos">
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />

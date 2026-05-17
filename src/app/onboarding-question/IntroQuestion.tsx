@@ -51,7 +51,11 @@ export default function IntroQuestion() {
     if (!selected) return;
     startTransition(async () => {
       await saveRelationshipIntentAction(selected.value);
-      setShowModal(true);
+      if (selected.value === "pareja") {
+        setSaved(true); // pareja → sin modal, directo
+      } else {
+        setShowModal(true);
+      }
     });
   }
 
@@ -78,7 +82,7 @@ export default function IntroQuestion() {
           Si no la contestas un día, se acumula — puedes responderlas todas cuando quieras.
         </p>
         <button
-          onClick={() => router.push("/match")}
+          onClick={() => router.push("/day-0")}
           className="w-full max-w-[280px] py-3.5 rounded-2xl bg-rose text-white text-[14px] font-light tracking-wide"
         >
           Empezar →

@@ -58,6 +58,7 @@ export async function resetOnboardingAction(): Promise<void> {
       distance_km: 50,
       city: null,
       photos: [],
+      relationship_intent: null,
     })
     .eq("user_id", user.id);
 

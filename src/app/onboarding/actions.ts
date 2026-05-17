@@ -86,7 +86,7 @@ export async function saveProfileAction(
 
   if (user.email) await sendWelcomeEmail(user.email, locale);
 
-  redirect("/day-0");
+  redirect("/onboarding-question");
 }
 
 function capitalize(s: string): string {
