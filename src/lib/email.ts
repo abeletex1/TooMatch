@@ -292,11 +292,28 @@ export async function sendMessageEmail(
 ): Promise<void> {
   const email = await getUserEmail(userId);
   if (!email) return;
-  await sendEmail(email, {
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("locale")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const isEn = (profile?.locale ?? "es") === "en";
+
+  await sendEmail(email, isEn ? {
+    subject: "You have a new message on Too Match",
+    html: emailTemplate(
+      "You have a new message.",
+      "Your match has written to you. Open the app to read it.",
+      "Read message →",
+      `/chats/${matchId}`
+    ),
+  } : {
     subject: "Tienes un nuevo mensaje en Too Match",
     html: emailTemplate(
       "Tienes un nuevo mensaje.",
-      "Alguien te ha escrito. Entra para leerlo.",
+      "Tu match te ha escrito. Entra para leerlo.",
       "Leer mensaje →",
       `/chats/${matchId}`
     ),
