@@ -286,7 +286,7 @@ function Step1({
 }) {
   const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
-  const minChars = 150;
+  const minChars = 50;
   const text = data.self_description;
 
   const guides = [t("step1Prompt1"), t("step1Prompt2"), t("step1Prompt3")];
@@ -351,7 +351,7 @@ function Step2({
 }) {
   const t = useTranslations("onboarding");
   const [usedGuides, setUsedGuides] = useState<Set<number>>(new Set());
-  const minChars = 150;
+  const minChars = 50;
   const text = data.partner_description;
 
   const guides = [t("step2Prompt1"), t("step2Prompt2"), t("step2Prompt3"), t("step2Prompt4")];
@@ -968,9 +968,9 @@ export default function OnboardingFlow({
   function canProceed(): boolean {
     switch (step) {
       case 1:
-        return data.self_description.trim().length >= 150;
+        return data.self_description.trim().length >= 50;
       case 2:
-        return data.partner_description.trim().length >= 150;
+        return data.partner_description.trim().length >= 50;
       case 3:
         return data.values.length >= 1;
       case 4:

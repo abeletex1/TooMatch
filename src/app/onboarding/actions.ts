@@ -32,9 +32,9 @@ export async function saveProfileAction(
 
   if (!user) return { error: "No hay sesión activa." };
 
-  if (payload.self_description.trim().length < 30)
+  if (payload.self_description.trim().length < 50)
     return { error: "La descripción de ti es demasiado corta." };
-  if (payload.partner_description.trim().length < 30)
+  if (payload.partner_description.trim().length < 50)
     return { error: "La descripción de lo que buscas es demasiado corta." };
   if (payload.values.length < 1)
     return { error: "Selecciona al menos un valor." };

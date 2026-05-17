@@ -128,8 +128,10 @@ export default function SettingsClient({ email, isAdmin = false }: { email: stri
               document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000`;
               window.location.reload();
             }} />
-          <Row icon={<RefreshIcon />} label={t("repeatOnboarding")}
-            onClick={() => startTransition(() => resetOnboardingAction())} />
+          {isAdmin && (
+            <Row icon={<RefreshIcon />} label={t("repeatOnboarding")}
+              onClick={() => startTransition(() => resetOnboardingAction())} />
+          )}
         </Section>
 
         <Section title={t("sectionLegal")}>
