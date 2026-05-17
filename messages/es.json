@@ -161,6 +161,8 @@
     "step5Title1": "¿Dónde",
     "step5Title2": "estás?",
     "step5Subtitle": "Tu provincia y ciudad. Así encontramos matches cerca de ti.",
+    "step5Nationality": "Nacionalidad",
+    "step5NationalityPlaceholder": "Española, italiana, francesa…",
     "step5Province": "Provincia",
     "step5SearchProvince": "Buscar provincia…",
     "step5NoResults": "Sin resultados.",

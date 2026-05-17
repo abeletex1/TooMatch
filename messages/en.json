@@ -161,6 +161,8 @@
     "step5Title1": "Where",
     "step5Title2": "are you?",
     "step5Subtitle": "Your province and city. This helps us find matches near you.",
+    "step5Nationality": "Nationality",
+    "step5NationalityPlaceholder": "Spanish, Italian, French…",
     "step5Province": "Province",
     "step5SearchProvince": "Search province…",
     "step5NoResults": "No results.",

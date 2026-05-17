@@ -33,6 +33,7 @@ type Data = {
   age: number;
   age_min: number;
   age_max: number;
+  nationality: string;
   province: string;
   city: string;
   photos: string[];
@@ -561,6 +562,15 @@ function Step5({
         subtitle={t("step5Subtitle")}
       />
 
+      <p className="text-[12px] text-ink-2 mb-2">{t("step5Nationality")}</p>
+      <input
+        type="text"
+        placeholder={t("step5NationalityPlaceholder")}
+        value={data.nationality}
+        onChange={(e) => update({ nationality: e.target.value })}
+        className="w-full border-[0.5px] border-border-strong rounded-xl px-3.5 py-2.5 text-[13px] font-light bg-bg text-ink outline-none focus:border-rose mb-4"
+      />
+
       <p className="text-[12px] text-ink-2 mb-2">{t("step5Province")}</p>
       {data.province ? (
         <div className="flex items-center gap-2 mb-3">
@@ -886,6 +896,7 @@ export default function OnboardingFlow({
     age: initialAge,
     age_min: 22,
     age_max: 38,
+    nationality: "",
     province: "",
     city: "",
     photos: [],
@@ -908,7 +919,7 @@ export default function OnboardingFlow({
       case 4:
         return data.age_min < data.age_max;
       case 5:
-        return data.province !== "" && data.city.trim() !== "";
+        return data.nationality.trim() !== "" && data.province !== "" && data.city.trim() !== "";
       case 6:
         return true; // fotos opcionales por ahora
       default:
