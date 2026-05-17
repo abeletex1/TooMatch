@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import ZoomReset from "@/components/ui/ZoomReset";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -53,6 +54,7 @@ export default async function RootLayout({
     >
       <body className="bg-bg-3 antialiased" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
+          <ZoomReset />
           {children}
         </NextIntlClientProvider>
       </body>
