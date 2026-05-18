@@ -76,11 +76,6 @@ export default function PrivacyPage() {
             <li>
               <strong>Resend</strong> — envío de emails transaccionales.
             </li>
-            <li>
-              <strong>Microsoft Clarity</strong> — análisis de comportamiento
-              anónimo (mapas de calor y grabaciones de sesión sin contenido
-              personal).
-            </li>
           </ul>
           <p className="mt-2">
             Todos ellos actúan como encargados del tratamiento bajo acuerdos
