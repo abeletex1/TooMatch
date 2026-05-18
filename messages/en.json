@@ -42,6 +42,7 @@
     "creatingAccount": "Creating account…",
     "checkEmail": "Check your email to confirm the change.",
     "createWithEmail": "Create account with email",
+    "noCorporateEmail": "We don't accept corporate email. Use your personal email.",
     "forgotPassword": "Forgot your password?",
     "forgotPasswordTitle": "Recover password",
     "forgotPasswordBody": "Enter your email and we'll send you a link to reset your password.",

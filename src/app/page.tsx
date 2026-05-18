@@ -65,6 +65,10 @@ export default function HomePage() {
             {t("createWithEmail")}
           </Link>
 
+          <p className="text-center text-[11px] text-rose-dark font-light leading-relaxed">
+            ⚠ {t("noCorporateEmail")}
+          </p>
+
           <p className="text-center text-[12px] text-ink-3 font-light mt-3">
             {t("alreadyHaveAccount")}{" "}
             <Link href="/login" className="text-rose underline underline-offset-2">
