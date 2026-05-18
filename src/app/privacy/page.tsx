@@ -18,13 +18,13 @@ export default function PrivacyPage() {
             Política de Privacidad
           </h1>
           <p className="text-[12px] text-ink-3 font-light mt-1">
-            Última actualización: 3 de mayo de 2026
+            Última actualización: 18 de mayo de 2026
           </p>
         </div>
 
         <Section title="1. Quién somos">
           <p>
-            Too Match es una aplicación de citas operada por Abel Expósito Roselló
+            Too Match es una aplicación de citas operada por Too Match
             («nosotros», «nuestro»). Puedes contactarnos en{" "}
             <a href="mailto:hola@toomatch.app" className="text-rose underline">
               hola@toomatch.app
@@ -40,9 +40,6 @@ export default function PrivacyPage() {
             <li>
               Información de perfil: descripción personal, valores, género,
               orientación, edad, ciudad y fotos que subes tú mismo.
-            </li>
-            <li>
-              Mensajes que intercambias con tus matches dentro de la app.
             </li>
             <li>
               Si usas «Continuar con Google», recibimos tu nombre y correo
@@ -78,6 +75,11 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Resend</strong> — envío de emails transaccionales.
+            </li>
+            <li>
+              <strong>Microsoft Clarity</strong> — análisis de comportamiento
+              anónimo (mapas de calor y grabaciones de sesión sin contenido
+              personal).
             </li>
           </ul>
           <p className="mt-2">
