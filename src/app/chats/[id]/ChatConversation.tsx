@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import MatchAvatar from "@/components/ui/MatchAvatar";
@@ -329,8 +330,9 @@ export default function ChatConversation({
         <div className="flex-1 overflow-y-auto pb-6">
           <div className="relative w-full aspect-[3/4] bg-bg-2 overflow-hidden">
             {match.photos[0] ? (
-              <img src={match.photos[0]} alt={match.name}
-                className={`w-full h-full object-cover transition-all duration-700 ${unlocked ? "" : "blur-2xl scale-105"}`} />
+              <Image src={match.photos[0]} alt={match.name}
+                fill sizes="420px"
+                className={`object-cover transition-all duration-700 ${unlocked ? "" : "blur-2xl scale-105"}`} />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <span className="font-serif text-[80px] text-ink-3">{match.initial}</span>

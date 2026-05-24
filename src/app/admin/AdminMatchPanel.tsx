@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { createMatchAction, deleteMatchAction, autoMatchAction } from "./actions";
 import { useRouter } from "next/navigation";
 
@@ -30,10 +31,9 @@ type Match = {
 function Avatar({ profile }: { profile: Profile }) {
   const initial = (profile.display_name ?? "?").charAt(0).toUpperCase();
   return (
-    <div className="w-9 h-9 rounded-full bg-rose-light border border-rose-mid overflow-hidden flex items-center justify-center shrink-0">
+    <div className="relative w-9 h-9 rounded-full bg-rose-light border border-rose-mid overflow-hidden flex items-center justify-center shrink-0">
       {profile.photos?.[0] ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.photos[0]} alt={initial} className="w-full h-full object-cover" />
+        <Image src={profile.photos[0]} alt={initial} fill sizes="36px" className="object-cover" />
       ) : (
         <span className="font-serif italic text-rose text-[16px]">{initial}</span>
       )}

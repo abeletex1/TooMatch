@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import ExpandableText from "@/components/ui/ExpandableText";
@@ -116,8 +117,7 @@ function PhotoPickSheet({
                 className={`aspect-square rounded-xl overflow-hidden relative border-2 transition-colors ${
                   i === 0 ? "border-rose" : "border-transparent hover:border-rose-mid"
                 }`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                <Image src={url} alt={`Foto ${i + 1}`} fill sizes="120px" className="object-cover" />
                 {i === 0 && (
                   <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider bg-rose text-white">
                     Principal
@@ -321,10 +321,9 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
           onClick={() => open("photo_pick")}
           className="relative w-20 h-20 rounded-full mx-auto mb-3 group"
         >
-          <div className="w-full h-full rounded-full bg-bg border-2 border-rose-mid overflow-hidden">
+          <div className="relative w-full h-full rounded-full bg-bg border-2 border-rose-mid overflow-hidden">
             {mainPhoto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mainPhoto} alt="Tu foto" className="w-full h-full object-cover" />
+              <Image src={mainPhoto} alt="Tu foto" fill sizes="80px" className="object-cover" />
             ) : (
               <span className="font-serif italic text-[26px] text-rose flex items-center justify-center h-full">
                 {(profile.display_name || userEmail).charAt(0).toUpperCase()}
@@ -431,8 +430,7 @@ export default function ProfileEditor({ initial, userEmail }: { initial: Profile
                     className={`aspect-square rounded-[10px] bg-bg-2 overflow-hidden relative cursor-pointer transition-all ${
                       selectedPhotoIdx === i ? "ring-2 ring-rose scale-95" : selectedPhotoIdx !== null ? "opacity-60" : ""
                     }`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                    <Image src={url} alt={`Foto ${i + 1}`} fill sizes="120px" className="object-cover" />
                     <button type="button" onClick={(e) => { e.stopPropagation(); removePhoto(i); setSelectedPhotoIdx(null); }}
                       className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-ink/80 text-bg text-[12px] flex items-center justify-center">
                       ×

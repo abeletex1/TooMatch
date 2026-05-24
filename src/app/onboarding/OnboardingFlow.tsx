@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import MobileShell from "@/components/ui/MobileShell";
 import Topbar from "@/components/ui/Topbar";
@@ -875,8 +876,7 @@ function Step6({
                 : ""
             }`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt={t("step6PhotoLabel", { n: i + 1 })} className="w-full h-full object-cover pointer-events-none" />
+            <Image src={url} alt={t("step6PhotoLabel", { n: i + 1 })} fill sizes="120px" className="object-cover pointer-events-none" />
             <button
               type="button"
               onPointerDown={(e) => e.stopPropagation()}

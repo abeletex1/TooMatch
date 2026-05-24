@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import ExpandableText from "@/components/ui/ExpandableText";
 import { redirect, notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -147,9 +148,8 @@ export default async function MatchProfilePage({
             p.photos.length > 0 ? (
               <div className="grid grid-cols-3 gap-1.5">
                 {p.photos.map((url, i) => (
-                  <div key={i} className="aspect-square rounded-[10px] overflow-hidden bg-bg-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                  <div key={i} className="aspect-square rounded-[10px] overflow-hidden bg-bg-2 relative">
+                    <Image src={url} alt={`Photo ${i + 1}`} fill sizes="140px" className="object-cover" />
                   </div>
                 ))}
               </div>

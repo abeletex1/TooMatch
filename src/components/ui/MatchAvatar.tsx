@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 type Size = "sm" | "md" | "lg" | "xl";
 
@@ -64,16 +65,17 @@ export default function MatchAvatar({
 
   const inner = (
     <div
-      className={`rounded-full bg-bg ${BORDER[size]} border-rose-mid overflow-hidden flex items-center justify-center shrink-0 ${shadowClass}`}
+      className={`relative rounded-full bg-bg ${BORDER[size]} border-rose-mid overflow-hidden flex items-center justify-center shrink-0 ${shadowClass}`}
       style={{ width: px, height: px }}
       data-match-id={matchId}
     >
       {photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={photoUrl}
           alt={`${initial}.`}
-          className={`w-full h-full object-cover transition-[filter,transform] duration-700 ${blurClass}`}
+          fill
+          sizes={`${px}px`}
+          className={`object-cover transition-[filter,transform] duration-700 ${blurClass}`}
         />
       ) : (
         <span className={`font-serif italic text-rose ${FALLBACK_TEXT[size]}`}>
