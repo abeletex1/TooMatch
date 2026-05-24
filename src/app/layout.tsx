@@ -32,10 +32,18 @@ export const metadata: Metadata = {
   title: "Too Match",
   description: "Stop likes. Start match.",
   manifest: "/manifest.json",
+  applicationName: "Too Match",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Too Match",
+  },
+  openGraph: {
+    title: "Too Match",
+    description: "Stop likes. Start match.",
+    siteName: "Too Match",
+    url: "https://toomatch.app",
+    type: "website",
   },
 };
 
