@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.toomatch.android",
+    "sha256_cert_fingerprints": ["F0:35:45:B3:61:53:D9:E8:A3:9B:40:B3:DD:5E:56:CD:24:10:44:0F:90:22:C9:8D:66:77:40:C4:9F:4B:2A:2B"]
+  }
+}]
