@@ -62,6 +62,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-bg-3 antialiased" suppressHydrationWarning>
+        {/* Service Worker — PWA offline + caché */}
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function(){});
+          }`}
+        </Script>
+
         {/* Microsoft Clarity — heatmaps y grabación de sesiones */}
         <Script id="clarity" strategy="afterInteractive">
           {`(function(c,l,a,r,i,t,y){
