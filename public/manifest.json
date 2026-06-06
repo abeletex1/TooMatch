@@ -13,6 +13,18 @@
   "dir": "ltr",
   "categories": ["social", "lifestyle"],
   "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "share_target": {
+    "action": "/match",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -53,6 +65,29 @@
       "description": "Ver conversaciones",
       "url": "/chats",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/screen-match.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Match del día"
+    },
+    {
+      "src": "/screenshots/screen-chat.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Conversaciones"
+    },
+    {
+      "src": "/screenshots/screen-profile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mi perfil"
     }
   ]
 }
