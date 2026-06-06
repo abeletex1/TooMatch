@@ -77,7 +77,7 @@
     },
     {
       "src": "/screenshots/screen-chat.png",
-      "sizes": "1080x1920",
+      "sizes": "736x1600",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Conversaciones"
