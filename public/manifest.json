@@ -70,21 +70,21 @@
   "screenshots": [
     {
       "src": "/screenshots/screen-match.png",
-      "sizes": "390x844",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Match del día"
     },
     {
       "src": "/screenshots/screen-chat.png",
-      "sizes": "390x844",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Conversaciones"
     },
     {
       "src": "/screenshots/screen-profile.png",
-      "sizes": "390x844",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Mi perfil"
