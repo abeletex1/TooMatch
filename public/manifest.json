@@ -2,6 +2,7 @@
   "name": "Too Match",
   "short_name": "Too Match",
   "description": "Stop likes. Start match. Una app de citas que pone la personalidad primero.",
+  "id": "/match",
   "start_url": "/match",
   "scope": "/",
   "display": "standalone",
