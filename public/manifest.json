@@ -10,6 +10,7 @@
   "theme_color": "#FAF7F2",
   "orientation": "portrait",
   "lang": "es",
+  "dir": "ltr",
   "categories": ["social", "lifestyle"],
   "prefer_related_applications": false,
   "icons": [
